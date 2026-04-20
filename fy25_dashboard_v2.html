@@ -1,0 +1,3185 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FY25 事業実績ダッシュボード</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#fff;--bg2:#f7f6f3;--bg3:#efede8;
+  --text1:#1a1916;--text2:#6b6860;--text3:#9c9a94;
+  --border:#e2dfd8;--border2:#ccc9c0;
+  --green:#1d7a5f;--green-bg:#edf5f2;
+  --amber:#96600a;--amber-bg:#fdf4e7;
+  --red:#b83a2e;--red-bg:#fdf0ee;
+  --font:-apple-system,BlinkMacSystemFont,"Helvetica Neue","Hiragino Sans","Noto Sans CJK JP",sans-serif;
+  --mono:"SF Mono","Menlo","Consolas","Courier New",monospace;
+  --c-gk:#A8C5DA;--c-gk-d:#4A7A9B;
+  --c-st:#E8A598;--c-st-d:#B05040;
+  --c-lc:#C5B4E3;--c-lc-d:#7A5AAB;
+  --c-hb:#A8D5B5;--c-hb-d:#3A8A55;
+  --c-mr:#F5D4A0;--c-mr-d:#C07820;
+  --c-ky:#F5A8A0;--c-ky-d:#B83A2E;
+  --c-ot:#D4C5B0;--c-ot-d:#8A7A60;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg3);font-family:var(--font);font-size:12.5px;color:var(--text1)}
+.wrap{max-width:1100px;margin:0 auto;background:var(--bg);box-shadow:0 0 0 1px var(--border);min-height:100vh}
+.hdr{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.hdr-main .title{font-size:13px;font-weight:600}.hdr-main .sub{font-size:11px;color:var(--text2);margin-top:2px}
+.lang-btn{display:flex;gap:4px}
+.lang-btn button{border:1px solid var(--border2);background:var(--bg2);color:var(--text2);padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:var(--font)}
+.lang-btn button.on{background:#1a1916;color:#fff;border-color:#1a1916}
+.tab-bar{display:flex;overflow-x:auto;border-bottom:1px solid var(--border);padding:0 12px;background:var(--bg)}
+.tab-bar::-webkit-scrollbar{height:0}
+.tab-btn{padding:9px 13px;font-size:12px;border:none;background:none;cursor:pointer;color:var(--text2);white-space:nowrap;border-bottom:2.5px solid transparent;font-family:var(--font)}
+.tab-btn.on{color:var(--text1);border-bottom-color:#FFB7C5;font-weight:600;background:#fff8f9}
+.tab-btn:hover:not(.on){color:var(--text1);background:var(--bg2)}
+.pane{display:none;padding:16px}.pane.on{display:block}
+.kpi-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin-bottom:16px}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px}
+.kpi-lbl{font-size:11px;color:var(--text2);margin-bottom:4px}
+.kpi-val{font-size:21px;font-weight:300;font-family:var(--mono);letter-spacing:-0.02em}
+.kpi-sub{font-size:10.5px;color:var(--text3);margin-top:3px}
+.pos{color:var(--green)}.neg{color:var(--red)}.neutral{color:var(--text1)}
+.cw{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:14px}
+.ct{font-size:13px;font-weight:500;margin-bottom:10px;color:var(--text1)}
+.cn{font-size:11px;color:var(--text3);margin-top:6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+@media(max-width:640px){.grid2{grid-template-columns:1fr}}
+.tbl-wrap{overflow-x:auto;margin-bottom:6px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{font-size:11px;color:var(--text3);font-weight:400;padding:6px 8px;border-bottom:1px solid var(--border2);text-align:left;white-space:nowrap}
+th.r{text-align:right}
+td{padding:6px 8px;border-bottom:1px solid var(--border)}
+td.r{text-align:right;font-family:var(--mono);font-size:12px;white-space:nowrap}
+tr:hover td{background:var(--bg2)}
+.tr-total td{font-weight:700;border-top:1.5px solid var(--border2);border-bottom:1.5px solid var(--border2);background:var(--bg2)}
+.tr-sub td{font-weight:600;border-top:1px solid var(--border);background:var(--bg3);font-size:11.5px}
+.tr-neg td{background:var(--red-bg)}
+.sbar{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap}
+.sb{padding:5px 12px;font-size:11.5px;border:1px solid var(--border);border-radius:4px;cursor:pointer;background:var(--bg2);color:var(--text2);font-family:var(--font)}
+.sb.on{background:#B5EAD7;border-color:#7EC8A0;color:#1a1916;font-weight:600}
+.comp-type{padding:4px 10px;font-size:11.5px;border:1px solid var(--border2);border-radius:4px;cursor:pointer;background:var(--bg3);color:var(--text2);font-family:var(--font)}
+.comp-type.on{background:var(--bg2);color:var(--text1);font-weight:600;border-color:var(--border2)}
+.sp{display:none}.sp.on{display:block}
+.ins{border:1px solid var(--border);border-radius:6px;margin-top:14px;overflow:hidden}
+.ins-h{padding:10px 14px;cursor:pointer;font-size:12.5px;color:var(--text2);background:var(--bg2);user-select:none;display:flex;justify-content:space-between}
+.ins-h:hover{background:var(--bg3)}
+.ins-b{display:none;padding:14px;font-size:12px;line-height:1.75;border-top:1px solid var(--border)}
+.ins-b p{margin-bottom:8px}.ins-b p:last-child{margin-bottom:0}
+.scen{padding:12px;background:var(--green-bg);border-radius:6px;margin-top:8px}
+.scen-row{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
+.scen-row:last-child{margin-bottom:0}
+.scen-num{font-size:20px;font-weight:300;font-family:var(--mono);color:var(--green)}
+.scen-lbl{font-size:12px;color:var(--text1)}
+.funnel-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.funnel-lbl{font-size:11px;color:var(--text2);width:90px;text-align:right;flex-shrink:0}
+.funnel-bar{height:22px;border-radius:3px;display:flex;align-items:center;padding:0 8px;font-size:11px;font-weight:600;font-family:var(--mono);color:#fff;min-width:50px;transition:width .5s}
+.funnel-n{font-size:11px;color:var(--text2);margin-left:6px;font-family:var(--mono)}
+
+/* ── LANDING PAGE ── */
+#landing{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--bg);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:24px 20px;
+  overflow-y:auto;
+  transition:opacity 0.5s ease,visibility 0.5s ease;
+}
+#landing.hide{opacity:0;visibility:hidden;pointer-events:none;}
+#landing .ld-inner{
+  max-width:860px;width:100%;
+  display:flex;flex-direction:column;
+  gap:0;
+}
+/* eyebrow */
+#landing .ld-eyebrow{
+  font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
+  color:var(--text3);font-family:var(--mono);
+  margin-bottom:14px;
+  opacity:0;animation:ldUp 0.5s 0.1s ease forwards;
+}
+/* title */
+#landing .ld-title{
+  font-size:clamp(22px,4vw,38px);font-weight:300;
+  line-height:1.15;letter-spacing:-0.015em;
+  color:var(--text1);margin-bottom:6px;
+  opacity:0;animation:ldUp 0.5s 0.2s ease forwards;
+}
+#landing .ld-title strong{font-weight:700;}
+/* sub */
+#landing .ld-sub{
+  font-size:12px;color:var(--text2);margin-bottom:28px;
+  opacity:0;animation:ldUp 0.5s 0.3s ease forwards;
+}
+/* divider */
+#landing .ld-divider{
+  height:1px;background:var(--border);margin-bottom:24px;
+  opacity:0;animation:ldUp 0.4s 0.35s ease forwards;
+}
+/* chapter label */
+#landing .ld-ch-label{
+  font-size:10px;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--text3);font-family:var(--mono);
+  margin-bottom:12px;
+  opacity:0;animation:ldUp 0.4s 0.4s ease forwards;
+}
+/* chapter grid */
+#landing .ld-grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:8px;
+  margin-bottom:28px;
+  opacity:0;animation:ldUp 0.5s 0.45s ease forwards;
+}
+@media(max-width:700px){#landing .ld-grid{grid-template-columns:repeat(2,1fr);}}
+@media(min-width:701px) and (max-width:900px){#landing .ld-grid{grid-template-columns:repeat(3,1fr);}}
+
+#landing .ld-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:6px;
+  padding:12px 12px 10px;
+  cursor:pointer;text-decoration:none;color:inherit;
+  display:block;transition:background 0.15s,border-color 0.15s,transform 0.15s;
+  position:relative;overflow:hidden;
+}
+#landing .ld-card::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:2.5px;
+  background:var(--card-accent,#FFB7C5);opacity:0;transition:opacity 0.15s;
+}
+#landing .ld-card:hover{background:var(--bg3);border-color:var(--border2);transform:translateY(-2px);}
+#landing .ld-card:hover::after{opacity:1;}
+#landing .ld-card-num{
+  font-family:var(--mono);font-size:9.5px;color:var(--text3);
+  letter-spacing:0.08em;margin-bottom:6px;
+}
+#landing .ld-card-icon{font-size:18px;margin-bottom:5px;display:block;line-height:1;}
+#landing .ld-card-title{font-size:11.5px;font-weight:600;color:var(--text1);line-height:1.3;}
+
+/* enter button */
+#landing .ld-enter{
+  opacity:0;animation:ldUp 0.5s 0.6s ease forwards;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:12px;
+}
+#landing .ld-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:#1a1916;color:#fff;
+  border:none;padding:11px 24px;
+  font-size:12.5px;font-weight:600;font-family:var(--font);
+  border-radius:5px;cursor:pointer;
+  transition:opacity 0.15s,transform 0.15s;
+  letter-spacing:0.02em;
+}
+#landing .ld-btn:hover{opacity:0.82;transform:translateY(-1px);}
+#landing .ld-footer-note{font-size:10.5px;color:var(--text3);font-family:var(--mono);}
+
+/* animation */
+@keyframes ldUp{
+  from{opacity:0;transform:translateY(14px);}
+  to{opacity:1;transform:translateY(0);}
+}
+/* wrap hidden on load */
+#main-wrap{opacity:0;transition:opacity 0.4s ease;}
+#main-wrap.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<!-- ══ LANDING PAGE ══ -->
+<div id="landing">
+  <div class="ld-inner">
+    <div class="ld-eyebrow" id="ld-ey"></div>
+    <h1 class="ld-title" id="ld-title"></h1>
+    <p class="ld-sub" id="ld-sub"></p>
+    <div class="ld-divider"></div>
+    <div class="ld-ch-label" id="ld-ch-label"></div>
+    <div class="ld-grid" id="ld-grid"></div>
+    <div class="ld-enter">
+      <button class="ld-btn" onclick="enterDashboard()" id="ld-btn"></button>
+      <div class="ld-footer-note" id="ld-note"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MAIN DASHBOARD ══ -->
+<div id="main-wrap">
+<div class="wrap">
+
+<div class="hdr">
+  <div class="hdr-main">
+    <div class="title" data-k="ttl"></div>
+    <div class="sub" data-k="sub"></div>
+  </div>
+  <div class="lang-btn">
+    <button onclick="showLanding()" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:11px;color:var(--text2);border:1px solid var(--border2);border-radius:4px;background:none;cursor:pointer;font-family:var(--font);transition:all 0.15s;margin-right:6px" onmouseover="this.style.color='var(--text1)';this.style.borderColor='var(--border)'" onmouseout="this.style.color='var(--text2)';this.style.borderColor='var(--border2)'">⌂ TOP</button>
+    <button onclick="setL('ja')" id="bja">日本語</button>
+    <button onclick="setL('zh')" id="bzh" class="on">繁體中文</button>
+  </div>
+</div>
+
+<div class="tab-bar" id="tabs"></div>
+
+<div id="t1" class="pane on"></div>
+<div id="t2" class="pane"></div>
+<div id="t3" class="pane"></div>
+<div id="t4" class="pane"></div>
+<div id="t5" class="pane"></div>
+<div id="t6" class="pane"></div>
+<div id="t7" class="pane"></div>
+<div id="t8" class="pane"></div>
+<div id="t9" class="pane"></div>
+<div id="t10" class="pane"></div>
+
+</div><!-- /.wrap -->
+</div><!-- /#main-wrap -->
+<script>
+/* ══ LANDING JS ══ */
+const LD={
+  ja:{
+    ey:'FY25 ANNUAL REPORT',
+    title:'FY25 事業実績\nダッシュボード',
+    sub:'ベネッセ台北支社 ／ 2025年4月〜2026年3月',
+    chlabel:'CHAPTER INDEX',
+    btn:'ダッシュボードを開く →',
+    note:'FY25 CONFIDENTIAL',
+    cards:[
+      {num:'01',icon:'📊',title:'事業総括',tab:'t1',accent:'#FFB7C5'},
+      {num:'02',icon:'🛍️',title:'物販 A',tab:'t2',accent:'#A8C5DA'},
+      {num:'03',icon:'🏆',title:'売れ筋 TOP',tab:'t3',accent:'#F5D4A0'},
+      {num:'04',icon:'🔬',title:'購入者深彫り',tab:'t4',accent:'#C5B4E3'},
+      {num:'05',icon:'📡',title:'販売ルート深彫り',tab:'t5',accent:'#A8D5B5'},
+      {num:'06',icon:'🎭',title:'舞台劇 B',tab:'t6',accent:'#E8A598'},
+      {num:'07',icon:'⚖️',title:'IPライセンス',tab:'t7',accent:'#B5EAD7'},
+      {num:'08',icon:'🧬',title:'BCL / LTV',tab:'t8',accent:'#FFD7BE'},
+      {num:'09',icon:'🔍',title:'クロス分析',tab:'t9',accent:'#C5B4E3'},
+      {num:'10',icon:'💰',title:'費用構造',tab:'t10',accent:'#F5A8A0'},
+    ]
+  },
+  zh:{
+    ey:'FY25 ANNUAL REPORT',
+    title:'FY25 年度業績\n儀表板',
+    sub:'Benesse台北支社 ／ 2025年4月〜2026年3月',
+    chlabel:'CHAPTER INDEX',
+    btn:'開啟儀表板 →',
+    note:'FY25 CONFIDENTIAL',
+    cards:[
+      {num:'01',icon:'📊',title:'事業總括',tab:'t1',accent:'#FFB7C5'},
+      {num:'02',icon:'🛍️',title:'物販 A',tab:'t2',accent:'#A8C5DA'},
+      {num:'03',icon:'🏆',title:'銷售排行 TOP',tab:'t3',accent:'#F5D4A0'},
+      {num:'04',icon:'🔬',title:'購買者深度分析',tab:'t4',accent:'#C5B4E3'},
+      {num:'05',icon:'📡',title:'銷售管道深度分析',tab:'t5',accent:'#A8D5B5'},
+      {num:'06',icon:'🎭',title:'舞台劇 B',tab:'t6',accent:'#E8A598'},
+      {num:'07',icon:'⚖️',title:'IP授權',tab:'t7',accent:'#B5EAD7'},
+      {num:'08',icon:'🧬',title:'BCL / LTV',tab:'t8',accent:'#FFD7BE'},
+      {num:'09',icon:'🔍',title:'交叉分析',tab:'t9',accent:'#C5B4E3'},
+      {num:'10',icon:'💰',title:'費用結構',tab:'t10',accent:'#F5A8A0'},
+    ]
+  }
+};
+
+function renderLanding(lang){
+  const d=LD[lang||'zh'];
+  document.getElementById('ld-ey').textContent=d.ey;
+  document.getElementById('ld-title').innerHTML=d.title.replace('\n','<br>');
+  document.getElementById('ld-sub').textContent=d.sub;
+  document.getElementById('ld-ch-label').textContent=d.chlabel;
+  document.getElementById('ld-btn').textContent=d.btn;
+  document.getElementById('ld-note').textContent=d.note;
+  const grid=document.getElementById('ld-grid');
+  grid.innerHTML='';
+  d.cards.forEach(c=>{
+    const a=document.createElement('a');
+    a.className='ld-card';
+    a.href='#';
+    a.style.setProperty('--card-accent',c.accent);
+    a.innerHTML=`<div class="ld-card-num">CH.${c.num}</div><span class="ld-card-icon">${c.icon}</span><div class="ld-card-title">${c.title}</div>`;
+    a.addEventListener('click',function(e){
+      e.preventDefault();
+      enterDashboard(c.tab);
+    });
+    grid.appendChild(a);
+  });
+}
+
+function enterDashboard(tabId){
+  const landing=document.getElementById('landing');
+  const wrap=document.getElementById('main-wrap');
+  landing.classList.add('hide');
+  wrap.classList.add('show');
+  document.body.style.overflow='';
+  if(tabId) showTab(tabId);
+}
+
+function showLanding(){
+  const landing=document.getElementById('landing');
+  const wrap=document.getElementById('main-wrap');
+  // reset animations by re-cloning
+  landing.classList.remove('hide');
+  wrap.classList.remove('show');
+  document.body.style.overflow='hidden';
+  // re-trigger animations
+  const els=landing.querySelectorAll('[style*="animation"],.ld-eyebrow,.ld-title,.ld-sub,.ld-divider,.ld-ch-label,.ld-grid,.ld-enter');
+  els.forEach(el=>{el.style.animation='none';el.offsetHeight;el.style.animation='';});
+}
+
+/* init on load */
+document.addEventListener('DOMContentLoaded',function(){
+  renderLanding('zh');
+  document.body.style.overflow='hidden';
+});
+
+/* ══ DASHBOARD JS ══ */
+const T={
+ja:{
+  ttl:'FY25 事業実績ダッシュボード',
+  sub:'ベネッセ台北支社 ／ FY25（2025年4月〜2026年3月）',
+  tab:['事業総括','物販 A','売れ筋 TOP','購入者深彫り 🔬','販売ルート深彫り 📡','舞台劇 B','IPライセンス','BCL / LTV','クロス分析 🔍','費用構造'],
+  insight:'インサイト・解釈',open_hint:'クリックで展開',
+  kpi_rev:'総収入',kpi_biz:'事業利益（共通前）',kpi_kyotsu:'共通費',kpi_op:'営業利潤',kpi_ebitda:'Adj.EBITDA（円換算）',kpi_ebitda_sub:'為替込・HQ報告値（百万円）',
+  kpi_unit:'単位：百万NTD',
+  c1_jpy:'本社報告 Adj.EBITDA（JPY百万円）',
+  c1_jpy_n:'3月YTD実績。売上・Adj.EBITDAとも百万円。為替影響はP&L全体への加算値。',
+  jpy_rev:'売上',jpy_ebitda:'Adj.EBITDA',
+  jpy_biz:['学習周辺','舞台劇','IP事業','共通費用','為替影響','合計'],
+  c1_wf_n:'各事業の利益から共通費を差し引いた構造。縦棒は積み上げ起点・終点を示す。',
+  c1_rev:'収入構成（事業別）',c1_mg:'事業別利益率（%）',c1_pl:'事業別 P&L サマリー',
+  col_biz:'事業',col_rev:'収入',col_gp:'原価',col_gpr:'原価率',col_opex:'営業費用',col_hc:'人件費',col_gm:'一般管理費',col_op:'営業利潤',col_opr:'利潤率',col_subtotal:'事業利益合計（共通前）',
+  s2a:'学習商品',s2b:'周辺商品',s2c:'Mirafeel',
+  c2m:'月次売上推移（NTD）',c2ch:'管道別売上',c2all:'物販 3事業 × 管道別 月次推移',c2n:'CUBEデータより。舞台劇会場での周辺商品販売含む。',
+  c2gk_note:'※「その他」2.6M（FY25）は巧連智典藏網のセット商品を台湾クラウドファンディングサイト「挖貝」で販売した売上（5〜6月のスポット計上）。',
+  c2_gk_price:'学習商品 価格帯別分布（SKU数・売上・数量）',
+  c2_gk_price_n:'無償同梱品除外ベースで数量+17.5%（17,798→20,904個）・単価▲12.1%（3,182→2,797 NTD）。売上+3.3%は数量増が牽引。',
+  c2_gk_top:'学習商品 TOP10（商品別売上・単価・前年比）',
+  c2_gk_top_n:'好情緒EQ（NEW・9.2M）・語彙智育（NEW・7.2M）など新商品がFY25を牽引。英語Plus・進階版は旧商品で大幅減。',
+  c2_gk_repeat:'購買属性（FY25 顧客別）',
+  c2_hb_ch:'周辺商品 管道別売上（舞台劇依存構造）',
+  c2_hb_ch_n:'舞台劇管道が42%（8.84M）を占める。舞台劇の場次が減れば周辺商品収益は直撃される。',
+  c2_hb_price:'周辺商品 価格帯別分布',
+  c2_hb_price_n:'200-500 NTD帯が最多86 SKU・6.3M。500-1K帯は単価・数量ともバランス良好。',
+  c2_hb_top:'周辺商品 TOP10',
+  c2_hb_top_n:'活力車+118%・拖把+185%・廚房+129%の玩具系3商品が高成長。繪本2種は高数量・低単価。',
+  c2_mf_grp:'Mirafeel SKUグループ別（整箱・単包・半包・試用包）',
+  c2_mf_grp_n:'整箱が売上86%。試用包29 NTDは縮小傾向——試用→整箱転換が機能している証拠。',
+  c2_mf_sku:'Mirafeel 全SKU一覧',
+  c2_mf_repeat:'Mirafeel複数購買率25%は学習商品16%・周辺商品10%を大きく上回る。消耗品リピートの威力。',
+  c2_col_prod:'商品名',c2_col_rev:'売上',c2_col_cnt:'数量',c2_col_aov:'単価',c2_col_yoy:'前年比',
+  c2_col_sku:'SKU数',c2_col_pct:'売上%',
+  c3kpi_shows:'公演タイトル数',c3kpi_sess:'総場次',c3kpi_att:'総入場者数',c3kpi_rev:'チケット総収入',c3kpi_avg:'平均票価',
+  c3kpi_perpax:'場次あたり人次',c3kpi_biz:'企業包場場次',
+  c3rev:'公演別チケット収入',c3att:'公演別入場者数',c3price:'公演別平均票価（NTD）',c3det:'公演明細',
+  c3n:'※耶誕特別演出は企業・特別イベント形式のため平均票価が低い。',
+  c3col:['劇名','類型','場次','人次','票房（NTD）','平均票価','企業包場'],
+  c3_yoy:'FY24→FY25 主要指標比較',
+  c3_yoy_lbl:['FY24','FY25'],
+  c3_biz:'企業包場 vs 一般公演 人次内訳',
+  c3_biz_lbl:['企業包場','一般公演'],
+  c3_biz_n:'FY24は台積電・聯電等の大型包場21場次で人次の36%を占めていた。FY25は8場次・12%に激減。一般公演の平均票価は堅調（1,057NTD）。',
+  c3_venue:'場地別 実績（FY25）',
+  c3_venue_n:'※企業包場は別枠表示。高雄衛武営は豪雨により1日中止。',
+  c3_cost:'費用構造ドリルダウン（総費用34.9M・利益率44%）',
+  c3_cost_n:'制作費（編輯委託）が費用の81%を占める高固定費構造。',
+  c4md:'MD授權（製品ライセンス）',c4an:'アニメ/カトゥーン',
+  c4ven:'廠商別収入 TOP8',c4cat:'カテゴリ別構成',c4mon:'月次収入推移',
+  c4n:'202504〜202602（11ヶ月）のデータ。202603分は未集計。PL年間実績は26.2M NTD。',
+  c4_yoy:'FY24→FY25 廠商別前年比',
+  c4_pat:'支払パターン別 廠商構成',
+  c4_heat:'廠商別 月次収入ヒートマップ（FY25）',
+  c4_heat_n:'色の濃度は収入規模を示す。空白は支払なし月。',
+  c4_pat_lbl:['定期型（毎月）','スポット型（年3〜7回）','単発型（年1〜2回）'],
+  c4_div:'自社営業 vs 好園地代理',
+  c4_div_lbl:['自社営業','好園地代理'],
+  c4_div_n:'好園地経由はコミッション発生。維新・家樂寶・根華・敦景・悠活が対象。',
+  c4_new:'新規',c4_grow:'成長',c4_flat:'横ばい',c4_dec:'減少',c4_exit:'消滅',
+  c4_pat_reg:'定期型',c4_pat_spt:'スポット型',c4_pat_one:'単発型',
+  c5_kyotsu:'共通費内訳ウォーターフォール',c5_biz:'事業別費用マトリクス（科目別）',
+  c5_drill:'共通費 科目ドリルダウン',
+  c5lab:['人件費','一般管理費','営業費用','成本戻り','共通費合計'],
+  c5note:'共通費は削減困難な構造コスト。駐在員給与・台湾スタッフ本社相当・固定費が中心。',
+  c5note2:'※3月は年度末ボーナス支給により人件費が突出（獎金5.1M）。固定費（租金・折舊）は毎月ほぼ一定。',
+  c5_drill_hc:'人件費 科目別',c5_drill_gm:'一般管理費 科目別',c5_drill_opex:'営業費用 科目別',
+  c5_matrix_note:'各セルは費用規模（NTD）。事業ごとの費用構造の差異が一目でわかる。',
+  c5_detail_title:'共通費 詳細ドリルダウン（削減可能性分析）',
+  c5_ito_title:'委託處理 廠商別内訳（15.3M）',
+  c5_rent_title:'租金支出 廠商別内訳（11.7M）',
+  c5_ad_title:'廣告宣傳 廠商別内訳（2.5M）',
+  c5_misc_title:'雜費 廠商別内訳（3.3M）',
+  c5_dept_title:'一般管理費 部門別×科目別内訳（28.0M）',
+  c5_col_vendor:'廠商名稱',c5_col_dept:'部門',c5_col_cat:'科目',c5_col_amt:'金額',c5_col_note:'備考',
+  c5_reducible:'🔍 削減検討余地あり',
+  kpi_hc:'人件費（共通）',kpi_gm:'一般管理費（共通）',kpi_opex:'営業費用（共通）',kpi_credit:'成本戻り（控除）',
+  c6age:'有効BCL 月齢分布（2026年4月基準）',c6src:'来源管道別 有効BCL',
+  c6freq:'FY25 購買回数分布（LTV顧客）',c6bind:'LINE綁定 vs 非綁定 売上比較',
+  c6scen:'📈 再成長シナリオ（BCL / LTV改善インパクト試算）',
+  c6tab_db:'DB現況',c6tab_acq:'獲得分析',
+  c6_yr_cards:'出生年別 有効BCL（2026/04基準）',
+  c6_seg7:'月齢分布 全体構成比（現在月齢）',c6_seg7_n:'2026/04時点・出生年月から算出',
+  c6_seg7_tbl:'月齢バケット × 件数',
+  c6_new_monthly:'月次 新規BCL登録数',c6_new_monthly_n:'有効会員（青）＋無効会員（ピンク）・2024/04〜',
+  c6_cross:'月齢分布 × 月次（有効会員）',c6_cross_n:'登録時月齢（BCL活化開始時点）・現在月齢とは異なる',
+  c6_cross_tbl:'月齢ランク × 月次 クロス集計（登録時月齢）',
+  c6_block:'来源管道別 封鎖率',c6_block_n:'封鎖率が低い管道ほど「質の高いBCL」を獲得できている。',
+  c6_valid_lbl:'有効会員',c6_invalid_lbl:'無効（封鎖）',
+  c6_ltv_dist:'LTV分布（顧客数×金額帯）',
+  c6_ch_stats:'管道別 顧客特性（LTV・綁定率・リピート率）',
+  c6_ltv_dist_n:'5K NTD以上の顧客25%が売上の62%を担う上位集中構造。',
+  bcl_total:'DB総数',bcl_valid:'有効BCL',bcl_invalid:'無効BCL（封鎖）',bcl_valid_rate:'有効率',
+  bcl_newest:'最新月 新規有効',bcl_young:'SS+S+AA（現在月齢）',
+  ltv_cust:'FY25購買顧客数',ltv_avg:'平均LTV/顧客',ltv_med:'中央値LTV',
+  age_labels:['SS 0-12M','S 13-24M','A 25-36M','B 37-60M','C 61-84M','D 85M+'],
+  seg7_labels:['A 孕期','S 0-6M','SS 7-12M','S 13-24M','AA 25-36M','A 37-60M','B 61M+'],
+  bind_labels:['LINE綁定あり','LINE綁定なし'],
+  scen_title:'シナリオ試算',
+  scen1_lbl:'SS層(0-12M)を4%→15%に改善した場合の追加顧客',
+  scen2_lbl:'LTV/顧客を4,880→6,000に改善した場合の追加収入',
+  scen3_lbl:'LINE綁定ありの購買確率は非綁定の',
+  ins1:'<p>事業利益合計+81.3M NTD。しかし構造コスト（共通費91.6M）がこれを10.3M上回り、営業利潤は▲10.3M。Adj.EBITDA（円換算HQ報告）▲8M JPY。</p><p><strong>共通費の大半は固定コストであり短期圧縮余地は限られる。赤字幅を縮小・黒字転換するには収入側の積み上げしかない。</strong></p>',
+  ins3:'<p>分析中</p>',
+  ins4:'<p>分析中</p>',
+  ins5:'<p>分析中</p>',
+  ins6:'<p><strong>DB構造の核心課題：B 61M+が51%・A 37-60Mが29%で合計8割が37ヶ月以上。</strong>月刊廃刊後の新規獲得不足が蓄積した結果。2026/03月は新規有効4,263人と直近最高値で、孕期・0-12M層の新規登録が特に多かった。SS+S+AA（0-36M）の28,220人（19%）がターゲット顧客層の実態。</p><p><strong>管道の質は差が大きい。</strong>SHOPLINE封鎖率6%・舞台劇7%は最良。全管道32%・樂飛42%は封鎖率が高く、数を稼いでも活性会員にならない構造。主動綁定のCV率46% vs 異業合作2%という差とも整合する。獲得コストと封鎖率を組み合わせた「実質獲得単価」で管道評価すべき。</p><p><strong>LTVはTM顧客が質で圧倒。</strong>TM顧客は綁定率98%・平均LTV5,852 NTD・リピート率23%。KOL顧客は綁定47%だがLTV6,038 NTDと高単価。WEB顧客は数が多いが平均LTV3,831 NTDと低く、綁定促進→TM移行が最大のLTV改善レバー。</p>',
+  t7_c1:'① 管道×LINE綁定 リピート率（最重要優先キー）',
+  t7_c2:'② 2回目購買タイミング（ヶ月後）',
+  t7_c3:'③ 初回購買事業別リピート率',
+  t7_c4:'④ 月次 新規 vs リピート売上',
+  t7_c5:'⑤ クロスセル構造（学習→周辺が最大）',
+  t7_c6:'⑥ KOLは学習商品94%集中',
+  t7_c7:'⑦ 舞台劇×BCL転換ファネル',
+  t7_c8:'⑧ TMフォロー優先スコアリング（データ導出）',
+  t7_kpi1:'舞台劇BCL転換率',t7_kpi1s:'12,200家族中828人',
+  t7_kpi2:'WEB×綁定リピート率',t7_kpi2s:'vs 未綁定12.3%',
+  t7_kpi3:'最適TMウィンドウ',t7_kpi3v:'購買後30-60日',t7_kpi3s:'2回目の46%が3ヶ月以内',
+  t7_kpi4:'未活用1回購買者',t7_kpi5:'複数施策潜在収入',t7_kpi5s:'TM+Mirafeel+クロスセル',
+  t7_new:'新規',t7_rep:'リピート',t7_reprate:'リピート率',
+  t7_pri:'優先度',t7_seg:'セグメント',t7_scale:'規模',t7_rrate:'リピート率',t7_pot:'20%転換潜在収入',t7_act:'推奨アクション',
+  t7_bcl_lbl:['FY25来場（推定家族数）','うちBCL会員（推定40%）','実際BCL転換','非BCL来場家族（未転換）'],
+  t7_bcl_warn:'非BCL来場12,200家族のBCL転換はわずか6.8%。転換率30%改善で年間+3,660人BCL獲得・物販+2.7M NTD試算。最もコスト効率の高い獲得接点。',
+  t7_seg_a:'WEB/KOL×綁定あり×1回',t7_seg_b:'Mirafeel購買者',t7_seg_c:'学習商品→Mirafeel提案',t7_seg_d:'WEB/KOL×綁定なし×1回',
+  t7_act_a:'購買後30-60日TM優先接触',t7_act_b:'LC8T LINE 60日自動配信',t7_act_c:'P&G制約消滅・今すぐ可能',t7_act_d:'まずLINE綁定促進→TM',
+  t7_cn1:'✅ WEB×綁定あり が最高（24.3%）→ TMフォロー最優先セグメント',
+  t7_cn2:'🔴 1-2ヶ月後に集中（35%）→ 購買直後のフォローが最効果的',
+  t7_cn3:'Mirafeelは消耗品のため最高41.5%。学習商品12.6%は最低→次の提案は周辺商品',
+  t7_cn4:'3月リピート率32.4%（突出）= 春季公演効果。舞台劇が新規+リピートを同時牽引',
+  t7_cn5:'学習商品購買者の2回目購買先は周辺商品（1,339件）。「2本目の学習商品」ではない',
+  t7_cn6:'周辺商品・MirafeelのKOL活用はほぼゼロ。KOL×Mirafeel組み合わせは新規開拓余地',
+  t7_cross_lbl:['学習→周辺','学習→Mirafeel','Mirafeel→学習','Mirafeel→周辺'],
+  t7_kol_lbl:['学習商品','Mirafeel','周辺商品'],
+  t7_biz_lbl:['Mirafeel(紙おむつ)','周辺商品','学習商品'],
+  t9_tab:'購入者深彫り 🔬',
+  t9_kpi_high:'HIGH顧客（上位20%）',t9_kpi_cross:'クロスセル率',t9_kpi_tm_bind:'TM×綁定シェア',t9_kpi_multi_ltv:'複数事業 平均LTV',
+  t9_seg:'購入者 LTVセグメント別属性',t9_seg_n:'HIGH = 上位20%（LTV 7,099 NTD以上）/ LOW = 下位50%以下',
+  t9_seg_lbl:['HIGH（上位20%）','MID（中位30%）','LOW（下位50%）'],
+  t9_seg_cols:['セグメント','顧客数','平均LTV','LINE綁定率','リピート率','クロスセル率','TM比率'],
+  t9_biz_pat:'事業購買パターン（クロスセル構造）',
+  t9_biz_pat_n:'複数事業を購買した顧客はLTVが1.9倍。學習+周邊の組み合わせが最大収益源。',
+  t9_ch_seg:'管道×LINE綁定 6セグメント',
+  t9_ch_seg_n:'TM×綁定ありが売上34%を3,580人で担う。WEB顧客の綁定率向上→TM転換が最大レバー。',
+  t9_ch_cols:['管道','綁定','顧客数','平均LTV','リピート率','売上','売上シェア'],
+  t9_bind_timing:'LINE綁定タイミング（綁定あり顧客 8,103人）',
+  t9_bind_timing_n:'63%が1年以上前から綁定済みの既存ファン。購買月に初めて綁定した人は19%のみ。',
+  t9_first_buy:'初回購買月別 LTV・リピート率',
+  t9_first_buy_n:'5月（舞台劇・春季公演シーズン）のリピート率33%が最高。12月以降初購買は時間軸バイアスで低下。',
+  t9_freq_bind:'購買回数×LINE綁定 LTV比較',
+  t9_freq_bind_n:'回数が増えるほどLTVが加速。6回以上×綁定あり: 平均30,942 NTD。',
+  t10_cmp:'4管道 横断比較',
+  t10_cmp_rev:'売上（NTD）',t10_cmp_aov:'平均単価（NTD）',t10_cmp_ltv:'平均LTV（NTD）',t10_cmp_bind:'LINE綁定率',
+  t10_cmp_yoy:'FY24→FY25 前年比',t10_cmp_ltv_dist:'管道別 LTV分布比較',
+  t10_cmp_biz:'管道別 事業構成比（%）',t10_cmp_aov_biz:'管道別×事業別 平均単価（NTD）',
+  t10_cmp_freq:'管道別 購買回数分布',
+  t10_web_title:'WEB詳細',t10_tm_title:'TM（電話営業）詳細',
+  t10_kol_title:'KOL詳細',t10_ec_title:'EC詳細',
+  t10_top6:'学習商品 TOP6',t10_top6_col:['商品名','売上','数量','単価'],
+  t10_biz_detail:'事業別内訳（売上・単価・FY24比）',
+  t10_kol_monthly:'月次推移（スパイク構造）',
+  t10_kol_monthly_n:'5月・1月・3月に集中するKOL施策。年2〜3回の集中型構造。',
+  t10_ltv_dist:'顧客 LTV分布',t10_freq:'購買回数分布',
+  t10_sku:'SKU数',t10_top10c:'TOP10集中度',
+  t10_cust_cnt:'顧客数',t10_avg_ltv:'平均LTV',t10_bind:'LINE綁定率',t10_repeat:'リピート率',t10_cross:'クロスセル率'
+},
+zh:{
+  ttl:'FY25 年度業績總覽儀表板',
+  sub:'倍樂生台北支社 ／ FY25（2025年4月〜2026年3月）',
+  tab:['事業總括','物販 A','銷售排行 TOP','購買者深度分析 🔬','銷售管道深度分析 📡','舞台劇 B','IP授權','BCL / LTV','交叉分析 🔍','費用結構'],
+  insight:'洞察・解讀',open_hint:'點擊展開',
+  kpi_rev:'總收入',kpi_biz:'事業利潤（扣除共通前）',kpi_kyotsu:'共通費用',kpi_op:'營業利潤',kpi_ebitda:'Adj.EBITDA（日圓換算）',kpi_ebitda_sub:'含匯率影響・HQ報告值（百萬日圓）',
+  kpi_unit:'單位：百萬 NTD',
+  c1_jpy:'本社報告 Adj.EBITDA（日圓百萬）',
+  c1_jpy_n:'3月YTD實績。銷售額・Adj.EBITDA均以百萬日圓計。匯率影響為全P&L加成值。',
+  jpy_rev:'銷售額',jpy_ebitda:'Adj.EBITDA',
+  jpy_biz:['學習周邊','舞台劇','IP事業','共通費用','匯率影響','合計'],
+  c1_wf_n:'各事業利潤合計後扣除共通費的結構。各棒代表累積起點與終點。',
+  c1_rev:'收入構成（事業別）',c1_mg:'事業別利潤率（%）',c1_pl:'事業別 P&L 摘要',
+  col_biz:'事業',col_rev:'收入',col_gp:'原價',col_gpr:'原價率',col_opex:'營業費用',col_hc:'人件費',col_gm:'一般管費',col_op:'營業利潤',col_opr:'利潤率',col_subtotal:'事業利潤合計（扣除共通前）',
+  s2a:'學習商品',s2b:'周邊商品',s2c:'Mirafeel',
+  c2m:'月別銷售額推移（NTD）',c2ch:'管道別銷售',c2all:'物販3事業 × 管道別 月次推移',c2n:'來源：CUBE 財務儀表板。含舞台劇會場周邊商品銷售。',
+  c2gk_note:'※「其他」2.6M（FY25）為巧連智典藏網套組商品於台灣群眾募資平台「挖貝」販售之收入（集中於5〜6月之一次性計入）。',
+  c2_gk_price:'學習商品 價格帶分布（SKU數・銷售額・數量）',
+  c2_gk_price_n:'排除免費贈品後，數量+17.5%（17,798→20,904個）・單價▲12.1%（3,182→2,797 NTD）。銷售額+3.3%由數量增長帶動。',
+  c2_gk_top:'學習商品 TOP10（商品別銷售額・單價・同期比）',
+  c2_gk_top_n:'好情緒EQ（NEW・9.2M）、語彙智育（NEW・7.2M）等新品引領FY25。英語Plus・進階版為舊商品大幅下滑。',
+  c2_gk_repeat:'購買屬性（FY25 客戶別）',
+  c2_hb_ch:'周邊商品 管道別銷售（舞台劇依賴結構）',
+  c2_hb_ch_n:'舞台劇管道占42%（8.84M）。舞台劇場次減少將直接衝擊周邊商品收益。',
+  c2_hb_price:'周邊商品 價格帶分布',
+  c2_hb_price_n:'200-500 NTD帶SKU最多86種・6.3M。500-1K帶單價與數量均衡。',
+  c2_hb_top:'周邊商品 TOP10',
+  c2_hb_top_n:'活力車+118%・拖把+185%・廚房+129%玩具系三強高速成長。繪本2種高量低價。',
+  c2_mf_grp:'Mirafeel SKU群別（整箱・單包・半包・試用包）',
+  c2_mf_grp_n:'整箱占銷售額86%。試用包29 NTD持續縮小——試用→整箱轉換機制已在發揮作用。',
+  c2_mf_sku:'Mirafeel 全SKU一覽',
+  c2_mf_repeat:'Mirafeel回購率25%遠高於學習商品16%・周邊商品10%。消耗品回購的威力。',
+  c2_col_prod:'商品名',c2_col_rev:'銷售額',c2_col_cnt:'數量',c2_col_aov:'單價',c2_col_yoy:'同期比',
+  c2_col_sku:'SKU數',c2_col_pct:'銷售%',
+  c3kpi_shows:'演出劇目數',c3kpi_sess:'總場次',c3kpi_att:'總入場人次',c3kpi_rev:'票房總收入',c3kpi_avg:'平均票價',
+  c3kpi_perpax:'場次平均人次',c3kpi_biz:'企業包場場次',
+  c3rev:'劇目別票房收入',c3att:'劇目別入場人次',c3price:'劇目別平均票價（NTD）',c3det:'演出明細',
+  c3n:'※耶誕特別演出為企業包場特殊形式，平均票價偏低。',
+  c3col:['劇名','類型','場次','人次','票房（NTD）','平均票價','企業包場'],
+  c3_yoy:'FY24→FY25 主要指標比較',
+  c3_yoy_lbl:['FY24','FY25'],
+  c3_biz:'企業包場 vs 一般公演 人次構成',
+  c3_biz_lbl:['企業包場','一般公演'],
+  c3_biz_n:'FY24台積電・聯電等大型包場21場次占人次36%。FY25降至8場次・12%。一般公演平均票價健康（1,057 NTD）。',
+  c3_venue:'場地別 實績（FY25）',
+  c3_venue_n:'※企業包場另計。高雄衛武營因颱風停班課中止1天。',
+  c3_cost:'費用結構明細（總費用34.9M・利潤率44%）',
+  c3_cost_n:'編輯委託（制作費）占費用81%，為高固定費結構。',
+  c4md:'MD授權（商品授權）',c4an:'動畫/卡通',
+  c4ven:'廠商別收入 TOP8',c4cat:'類別構成',c4mon:'月別收入推移',
+  c4n:'資料期間：202504〜202602（11個月）。202603尚未彙整。全年P&L實績為26.2M NTD。',
+  c4_yoy:'FY24→FY25 廠商別同期比',
+  c4_pat:'付款模式別 廠商構成',
+  c4_heat:'廠商別 月別收入熱力圖（FY25）',
+  c4_heat_n:'色深代表收入規模。空白為無收款月份。',
+  c4_pat_lbl:['定期型（每月）','零星型（年3〜7次）','單次型（年1〜2次）'],
+  c4_div:'自營 vs 好園地代理',
+  c4_div_lbl:['自社營業','好園地代理'],
+  c4_div_n:'好園地代理通路需支付佣金。維新・家樂寶・根華・敦景・悠活均經由此通路。',
+  c4_new:'新規',c4_grow:'成長',c4_flat:'持平',c4_dec:'衰退',c4_exit:'消失',
+  c4_pat_reg:'定期型',c4_pat_spt:'零星型',c4_pat_one:'單次型',
+  c5_kyotsu:'共通費明細瀑布圖',c5_biz:'事業別費用矩陣（科目別）',
+  c5_drill:'共通費 科目細項',
+  c5lab:['人件費','一般管理費','營業費用','成本退回','共通費合計'],
+  c5note:'共通費為難以削減的結構性成本，主要包含駐在員薪資、台灣員工本社對應費及固定支出。',
+  c5note2:'※3月因年度末獎金發放，人件費突出（獎金5.1M）。租金・折舊等固定費每月近乎固定。',
+  c5_drill_hc:'人件費 科目細項',c5_drill_gm:'一般管理費 科目細項',c5_drill_opex:'營業費用 科目細項',
+  c5_matrix_note:'各欄位為費用金額（NTD）。可直觀比較各事業的費用結構差異。',
+  c5_detail_title:'共通費 詳細展開（削減可能性分析）',
+  c5_ito_title:'委託處理 廠商別明細（15.3M）',
+  c5_rent_title:'租金支出 廠商別明細（11.7M）',
+  c5_ad_title:'廣告宣傳 廠商別明細（2.5M）',
+  c5_misc_title:'雜費 廠商別明細（3.3M）',
+  c5_dept_title:'一般管理費 部門別×科目明細（28.0M）',
+  c5_col_vendor:'廠商名稱',c5_col_dept:'部門',c5_col_cat:'科目',c5_col_amt:'金額',c5_col_note:'備註',
+  c5_reducible:'🔍 可檢視削減空間',
+  kpi_hc:'人件費（共通）',kpi_gm:'一般管理費（共通）',kpi_opex:'營業費用（共通）',kpi_credit:'成本退回（扣除）',
+  c6age:'有效BCL月齡分布（2026年4月基準）',c6src:'來源管道別 有效BCL',
+  c6freq:'FY25 購買次數分布（LTV客戶）',c6bind:'LINE綁定 vs 未綁定 銷售比較',
+  c6scen:'📈 再成長情境（BCL / LTV改善影響試算）',
+  c6tab_db:'DB現況',c6tab_acq:'獲得分析',
+  c6_yr_cards:'出生年別 有效BCL（2026/04基準）',
+  c6_seg7:'月齡分布 全體構成比（現在月齡）',c6_seg7_n:'2026/04時點・依出生年月計算',
+  c6_seg7_tbl:'月齡區間 × 件數',
+  c6_new_monthly:'月別 新規BCL登錄數',c6_new_monthly_n:'有效會員（藍）＋無效會員（粉）・2024/04〜',
+  c6_cross:'月齡分布 × 月別（有效會員）',c6_cross_n:'登錄時月齡（BCL活化時點）・與現在月齡不同',
+  c6_cross_tbl:'月齡等級 × 月別 交叉統計（登錄時月齡）',
+  c6_block:'來源管道別 封鎖率',c6_block_n:'封鎖率低的管道代表獲取的BCL品質較高。',
+  c6_valid_lbl:'有效會員',c6_invalid_lbl:'無效（封鎖）',
+  c6_ltv_dist:'LTV分布（客戶數×金額帶）',
+  c6_ch_stats:'管道別 客戶特性（LTV・綁定率・回購率）',
+  c6_ltv_dist_n:'5K NTD以上的客戶占25%，卻貢獻62%的銷售額，呈高度集中結構。',
+  bcl_total:'DB總數',bcl_valid:'有效BCL',bcl_invalid:'無效BCL（封鎖）',bcl_valid_rate:'有效率',
+  bcl_newest:'最新月 新規有效',bcl_young:'SS+S+AA（現在月齡）',
+  ltv_cust:'FY25購買客戶數',ltv_avg:'平均LTV/客戶',ltv_med:'中位數LTV',
+  age_labels:['SS 0-12M','S 13-24M','A 25-36M','B 37-60M','C 61-84M','D 85M+'],
+  seg7_labels:['A 孕期','S 0-6M','SS 7-12M','S 13-24M','AA 25-36M','A 37-60M','B 61M+'],
+  bind_labels:['LINE已綁定','LINE未綁定'],
+  scen_title:'情境試算',
+  scen1_lbl:'若SS層(0-12M)從4%改善至15%，可新增客戶',
+  scen2_lbl:'若平均LTV從4,880提升至6,000，可新增收入',
+  scen3_lbl:'LINE已綁定客戶的購買機率是未綁定的',
+  ins1:'<p>事業利潤合計+81.3M NTD。然而結構性成本（共通費91.6M）超過10.3M，營業利潤為▲10.3M。Adj.EBITDA（日圓換算HQ報告）▲8M JPY。</p><p><strong>共通費大半為固定成本，短期壓縮空間有限。縮小赤字、實現盈虧平衡，唯有靠收入側的積累。</strong></p>',
+  ins3:'<p>分析中</p>',
+  ins4:'<p>分析中</p>',
+  ins5:'<p>分析中</p>',
+  ins6:'<p><strong>DB結構核心課題：B 61M+占51%、A 37-60M占29%，合計8成以上為37個月以上。</strong>月刊停刊後新規獲取不足累積的結果。2026/03新規有效4,263人為近期最高，孕期・0-12M層新規登錄特別多。SS+S+AA（0-36M）的28,220人（19%）是目標客群的實際規模。</p><p><strong>管道品質差異顯著。</strong>SHOPLINE封鎖率6%・舞台劇7%最佳。全管道32%・樂飛42%封鎖率偏高，獲取數量多但無法成為活躍會員。與主動綁定CV率46% vs 異業合作2%的差距一致。應以「獲取成本÷封鎖率」的實質獲取單價來評估管道。</p><p><strong>LTV方面TM客戶品質壓倒性領先。</strong>TM客戶綁定率98%・平均LTV5,852 NTD・回購率23%。KOL客戶綁定47%但LTV6,038 NTD單價高。WEB客戶數量多但平均LTV3,831 NTD偏低，促進綁定→TM轉換是最大的LTV改善槓桿。</p>',
+  t7_c1:'① 管道×LINE綁定 回購率（最重要優先鍵）',
+  t7_c2:'② 第二次購買時機（月後）',
+  t7_c3:'③ 首次購買事業別回購率',
+  t7_c4:'④ 月別 新客 vs 回購銷售',
+  t7_c5:'⑤ 交叉銷售結構（學習→周邊最大）',
+  t7_c6:'⑥ KOL94%集中於學習商品',
+  t7_c7:'⑦ 舞台劇×BCL轉換漏斗',
+  t7_c8:'⑧ TM跟進優先評分（數據導出）',
+  t7_kpi1:'舞台劇BCL轉換率',t7_kpi1s:'12,200家庭中828人',
+  t7_kpi2:'WEB×綁定回購率',t7_kpi2s:'vs 未綁定12.3%',
+  t7_kpi3:'最佳TM窗口',t7_kpi3v:'購買後30-60天',t7_kpi3s:'46%在3個月內回購',
+  t7_kpi4:'未活化1次購買者',t7_kpi5:'多項施策潛在收入',t7_kpi5s:'TM+Mirafeel+交叉銷售',
+  t7_new:'新客',t7_rep:'回購',t7_reprate:'回購率',
+  t7_pri:'優先度',t7_seg:'細分市場',t7_scale:'規模',t7_rrate:'回購率',t7_pot:'20%轉換潛在',t7_act:'建議行動',
+  t7_bcl_lbl:['FY25來場（推估家庭數）','其中BCL會員（推估40%）','實際BCL轉換','非BCL來場家庭（未轉換）'],
+  t7_bcl_warn:'非BCL來場12,200家庭轉換率僅6.8%。提升至30%可每年增加3,660名BCL・物販+2.7M NTD。性價比最高的獲取接點。',
+  t7_seg_a:'WEB/KOL×已綁定×1次',t7_seg_b:'Mirafeel購買者',t7_seg_c:'學習商品→Mirafeel提案',t7_seg_d:'WEB/KOL×未綁定×1次',
+  t7_act_a:'購買後30-60天TM優先聯繫',t7_act_b:'LC8T LINE 60天自動推播',t7_act_c:'P&G限制解除・立即可行',t7_act_d:'先促進LINE綁定→TM',
+  t7_cn1:'✅ WEB×已綁定最高（24.3%）→ TM跟進最優先細分市場',
+  t7_cn2:'🔴 集中在1-2個月後（35%）→ 購買後立即跟進最有效',
+  t7_cn3:'Mirafeel為消耗品故最高41.5%。學習商品12.6%最低→次推周邊商品',
+  t7_cn4:'3月回購率32.4%（突出）= 春季公演效應。舞台劇同時帶動新客與回購',
+  t7_cn5:'學習商品購買者第二次購買是周邊商品（1,339件），而非第二套學習商品',
+  t7_cn6:'周邊商品、Mirafeel的KOL活用近乎零。KOL×Mirafeel組合有新開拓空間',
+  t7_cross_lbl:['學習→周邊','學習→Mirafeel','Mirafeel→學習','Mirafeel→周邊'],
+  t7_kol_lbl:['學習商品','Mirafeel','周邊商品'],
+  t7_biz_lbl:['Mirafeel(紙尿褲)','周邊商品','學習商品'],
+  t9_tab:'購買者深度分析 🔬',
+  t9_kpi_high:'HIGH客戶（前20%）',t9_kpi_cross:'交叉銷售率',t9_kpi_tm_bind:'TM×綁定占比',t9_kpi_multi_ltv:'多事業平均LTV',
+  t9_seg:'購買者 LTV區段屬性',t9_seg_n:'HIGH = 前20%（LTV 7,099 NTD以上）/ LOW = 後50%以下',
+  t9_seg_lbl:['HIGH（前20%）','MID（中位30%）','LOW（後50%）'],
+  t9_seg_cols:['區段','客戶數','平均LTV','LINE綁定率','回購率','交叉銷售率','TM比率'],
+  t9_biz_pat:'事業購買模式（交叉銷售結構）',
+  t9_biz_pat_n:'購買多項事業的客戶LTV為單一事業的1.9倍。學習+周邊組合為最大收益來源。',
+  t9_ch_seg:'管道×LINE綁定 6區段',
+  t9_ch_seg_n:'TM×已綁定以3,580人貢獻34%銷售額。WEB客戶提升綁定率→轉TM是最大槓桿。',
+  t9_ch_cols:['管道','綁定','客戶數','平均LTV','回購率','銷售額','占比'],
+  t9_bind_timing:'LINE綁定時機（已綁定客戶 8,103人）',
+  t9_bind_timing_n:'63%為1年以上前已綁定的既有粉絲。購買當月才初次綁定者僅19%。',
+  t9_first_buy:'首次購買月別 LTV・回購率',
+  t9_first_buy_n:'5月（舞台劇・春季演出季節）回購率33%最高。12月後首購因時間軸偏差而偏低。',
+  t9_freq_bind:'購買次數×LINE綁定 LTV比較',
+  t9_freq_bind_n:'次數越多LTV加速增長。6次以上×已綁定：平均30,942 NTD。',
+  t10_cmp:'4管道 橫向比較',
+  t10_cmp_rev:'銷售額（NTD）',t10_cmp_aov:'平均客單價（NTD）',t10_cmp_ltv:'平均LTV（NTD）',t10_cmp_bind:'LINE綁定率',
+  t10_cmp_yoy:'FY24→FY25 同期比',t10_cmp_ltv_dist:'管道別 LTV分布比較',
+  t10_cmp_biz:'管道別 事業構成比（%）',t10_cmp_aov_biz:'管道別×事業別 平均客單價（NTD）',
+  t10_cmp_freq:'管道別 購買次數分布',
+  t10_web_title:'WEB詳細',t10_tm_title:'TM（電銷）詳細',
+  t10_kol_title:'KOL詳細',t10_ec_title:'EC詳細',
+  t10_top6:'學習商品 TOP6',t10_top6_col:['商品名','銷售額','數量','單價'],
+  t10_biz_detail:'事業別明細（銷售額・單價・FY24比）',
+  t10_kol_monthly:'月別推移（爆發結構）',
+  t10_kol_monthly_n:'集中於5月・1月・3月的KOL施策，呈現年2〜3次集中型結構。',
+  t10_ltv_dist:'客戶 LTV分布',t10_freq:'購買次數分布',
+  t10_sku:'SKU數',t10_top10c:'TOP10集中度',
+  t10_cust_cnt:'客戶數',t10_avg_ltv:'平均LTV',t10_bind:'LINE綁定率',t10_repeat:'回購率',t10_cross:'交叉銷售率'
+}};
+
+const D={
+  jpy:{
+    biz:['gk_hb','st','ip','ky','fx','total'],
+    rev:[404,282,135,null,70,891],
+    ebitda:[144,125,97,-406,19,-8]
+  },
+  months:['202504','202505','202506','202507','202508','202509','202510','202511','202512','202601','202602','202603'],
+  mLbl:['25/04','25/05','25/06','25/07','25/08','25/09','25/10','25/11','25/12','26/01','26/02','26/03'],
+  pl:[
+    {id:'gk',clr:'#A8C5DA',clrd:'#4A7A9B',rev:57503593,cost:21074751,opex:9150956,hc:10998,gm:120325,profit:27266888},
+    {id:'st',clr:'#E8A598',clrd:'#B05040',rev:62633663,cost:28218520,opex:3364775,hc:334281,gm:3036729,profit:27679358},
+    {id:'lc',clr:'#C5B4E3',clrd:'#7A5AAB',rev:26207352,cost:1936452,opex:3896614,hc:0,gm:120325,profit:20253961},
+    {id:'hb',clr:'#A8D5B5',clrd:'#3A8A55',rev:20890169,cost:10378428,opex:3838841,hc:7001,gm:7001,profit:6665899},
+    {id:'mr',clr:'#F5D4A0',clrd:'#C07820',rev:1963794,cost:1075177,opex:599084,hc:11336,gm:11336,profit:278197},
+    {id:'kd',clr:'#C8C8C8',clrd:'#787878',rev:7308218,cost:469074,opex:7353315,hc:0,gm:292789,profit:-806960},
+    {id:'ks',clr:'#D4C5B0',clrd:'#8A7A60',rev:2098916,cost:2452244,opex:1026128,hc:29,gm:29,profit:-1379485},
+    {id:'jp',clr:'#D4C5B0',clrd:'#8A7A60',rev:0,cost:0,opex:78131,hc:0,gm:0,profit:-78131},
+    {id:'ot',clr:'#D4C5B0',clrd:'#8A7A60',rev:2472977,cost:0,opex:1098235,hc:6070,gm:6070,profit:1368672},
+    {id:'ky',clr:'#F5A8A0',clrd:'#B83A2E',rev:0,cost:-7598417,opex:24629860,hc:28003033,gm:46558166,profit:-91592642},
+  ],
+  plNames:{
+    ja:['學習商品','舞台劇','授權金','周辺商品','Mirafeel','巧連智典藏網','巧連智商品','日本跨境','その他','共通費'],
+    zh:['學習商品','舞台劇','授權金','周邊商品','Mirafeel','巧連智典藏網','巧連智商品','日本跨境','其他','共通費']
+  },
+  cubeMonth:{
+    gk:[2921243,9698398,3875070,3280787,3541206,2308292,5028125,5266026,3362183,5160588,3404054,10628345],
+    hb:[1080000,2308084,1393561,1735019,2296125,1618621,1574578,1186820,1037774,2059466,2065796,2477986],
+    mr:[162383,181072,165629,134708,317043,145171,241093,249140,261006,205057,178349,279001]
+  },
+  bizDetail:{
+    gk:{
+      rev25:58474317,rev24:56628184,cnt25:20904,cnt24:17798,aov25:2797,aov24:3182,
+      repeatPct:16,singlePct:84,avgLtv:5186,
+      priceDist:[
+        {lb:'〜1K',sku:11,rev:116989,cnt:1413},
+        {lb:'1-2K',sku:3,rev:5201273,cnt:2749},
+        {lb:'2-3K',sku:5,rev:16363558,cnt:7355},
+        {lb:'3-4K',sku:3,rev:10119435,cnt:3317},
+        {lb:'4-5K',sku:4,rev:26673062,cnt:6070}
+      ],
+      top10:[
+        {n:'好情緒EQ X 品格人際套組',rev:9212342,cnt:4407,aov:2090,rev24:0},
+        {n:'寶寶生活好習慣學習套組A',rev:8223855,cnt:2007,aov:4098,rev24:5474483},
+        {n:'和巧虎一起說英語Plus',rev:7854948,cnt:1724,aov:4556,rev24:24557346},
+        {n:'語彙表達‧智育學習套組',rev:7149752,cnt:1532,aov:4667,rev24:0},
+        {n:'注音套組2.0',rev:6400630,cnt:2100,aov:3048,rev24:4092229},
+        {n:'點讀巧比思考力遊戲組',rev:5134509,cnt:2693,aov:1907,rev24:3715807},
+        {n:'巧虎雙語點讀圖鑑',rev:4349470,cnt:1918,aov:2268,rev24:0},
+        {n:'和巧虎一起說英語套組進階版',rev:3444507,cnt:807,aov:4268,rev24:10222098},
+        {n:'和巧虎一起學數學套組',rev:3407648,cnt:1118,aov:3048,rev24:0},
+        {n:'聰明左右腦 點讀大冒險套組',rev:2236249,cnt:783,aov:2856,rev24:0}
+      ]
+    },
+    hb:{
+      rev25:20833830,rev24:19000148,cnt25:45931,cnt24:43127,aov25:454,aov24:441,
+      repeatPct:10,stageShare:42,
+      chRev:[
+        {ch:'舞台劇',rev:8840000},{ch:'WEB',rev:4621248},{ch:'授權',rev:3170000},
+        {ch:'其他',rev:1400000},{ch:'EC',rev:1307788},{ch:'TM',rev:1101594},{ch:'KOL',rev:389922}
+      ],
+      priceDist:[
+        {lb:'〜200',sku:42,rev:935591,cnt:10618},
+        {lb:'200-500',sku:86,rev:6334054,cnt:21193},
+        {lb:'500-1K',sku:40,rev:7422883,cnt:10054},
+        {lb:'1-2K',sku:16,rev:5270518,cnt:3677},
+        {lb:'2K+',sku:10,rev:870784,cnt:389}
+      ],
+      top10:[
+        {n:'巧虎活力車編程遊戲組',rev:1213786,cnt:797,aov:1523,rev24:555895},
+        {n:'巧虎琪琪穿衣練習組',rev:1103301,cnt:586,aov:1883,rev24:882261},
+        {n:'拖把小精靈套組',rev:1022712,cnt:1155,aov:885,rev24:358716},
+        {n:'巧虎聲光廚房遊戲組',rev:886251,cnt:681,aov:1301,rev24:386509},
+        {n:'2026春季繪本 魔法音樂響叮噹',rev:805477,cnt:3384,aov:238,rev24:0},
+        {n:'巧虎神奇果汁店(感溫變色)',rev:800120,cnt:951,aov:841,rev24:0},
+        {n:'巧虎手偶互動遊戲組',rev:782874,cnt:2245,aov:349,rev24:979920},
+        {n:'2025夏季故事繪本_精靈的魔法夢境',rev:771903,cnt:3253,aov:237,rev24:0},
+        {n:'巧虎百變工具箱',rev:746660,cnt:893,aov:836,rev24:488011},
+        {n:'可愛好朋友玩偶組',rev:694674,cnt:528,aov:1316,rev24:349084}
+      ]
+    },
+    mf:{
+      rev25:2519652,rev24:609311,cnt25:2265,repeatPct:25,
+      grp:[
+        {g:'整箱',rev:2164951,cnt:1051},
+        {g:'單包',rev:268403,cnt:475},
+        {g:'半包',rev:71765,cnt:233},
+        {g:'試用包',rev:14533,cnt:506}
+      ],
+      skus:[
+        {n:'整箱L',rev:705700,cnt:391,aov:1805,rev24:108927},
+        {n:'整箱XL',rev:704548,cnt:296,aov:2380,rev24:121090},
+        {n:'整箱XXL',rev:400003,cnt:176,aov:2273,rev24:91754},
+        {n:'整箱M',rev:310300,cnt:163,aov:1904,rev24:60898},
+        {n:'單包L',rev:92421,cnt:164,aov:564,rev24:49520},
+        {n:'單包XL',rev:65044,cnt:116,aov:561,rev24:51809},
+        {n:'單包M',rev:58180,cnt:102,aov:570,rev24:23818},
+        {n:'半包L',rev:50110,cnt:168,aov:298,rev24:16825},
+        {n:'整箱S',rev:44400,cnt:25,aov:1776,rev24:1400},
+        {n:'單包XXL',rev:39999,cnt:71,aov:563,rev24:29569},
+        {n:'試用包',rev:14533,cnt:506,aov:29,rev24:19479}
+      ]
+    }
+  },
+  cubeCh:{
+    gk:{WEB:15830193,TM:19605057,EC:5288487,KOL:14611315,經銷商:569352,その他:2570310},
+    hb:{WEB:4621248,TM:1101594,EC:1307788,KOL:389922,舞台劇:8837770,授權:3170557,その他:1404929},
+    mr:{WEB:1459026,TM:575850,KOL:484776,その他:1652}
+  },
+  mByCh:{
+    gk:{WEB:[748,1680,1072,1017,921,513,1545,1592,1297,1270,1285,2890],TM:[1450,1964,1686,1461,1471,1047,1913,1591,1590,1687,974,2771],EC:[304,409,546,507,394,268,440,566,354,266,494,743],KOL:[351,3462,268,292,412,480,1130,1517,121,1938,415,4225],經銷商:[0,0,0,0,333,0,0,0,0,0,236,0],その他:[91,2183,304,4,10,0,0,0,0,0,0,0]},
+    hb:{WEB:[280,390,346,374,423,301,501,532,510,250,339,375],TM:[107,146,117,56,69,78,149,93,82,92,49,64],EC:[151,110,106,160,122,139,112,111,120,71,54,52],KOL:[16,102,16,14,24,30,56,24,4,47,10,46],舞台劇:[330,763,503,889,1364,702,343,228,0,1009,1003,1705],授權:[187,223,237,242,295,370,413,198,322,340,125,219],その他:[10,573,68,0,0,0,0,0,0,250,486,18]},
+    mr:{WEB:[83,55,63,67,120,111,170,162,209,148,124,147],TM:[79,101,75,52,30,16,33,21,36,37,54,42],KOL:[0,26,28,16,166,19,39,66,16,20,0,89]}
+  },
+  stage:[
+    {name:'魔法音樂響叮噹',type:'春季',sess:27,att:21930,rev:24111936,avg:1090},
+    {name:'精靈的魔法夢境',type:'夏季',sess:26,att:18168,rev:20361350,avg:1115},
+    {name:'花神祭',type:'春季',sess:10,att:8958,rev:7553251,avg:875,biz:true},
+    {name:'Musicalia',type:'音楽劇',sess:4,att:4384,rev:5720616,avg:1305},
+    {name:'英語劇',type:'英語劇',sess:16,att:4931,rev:3664478,avg:743},
+    {name:'耶誕特別演出',type:'耶誕',sess:2,att:2676,rev:381282,avg:142}
+  ],
+  stageFY24:[
+    {name:'BIZARROPIA',type:'音楽劇',sess:8,att:9065,rev:11907854,avg:1314,biz:false},
+    {name:'忍法咻咻碰',type:'夏季',sess:32,att:34997,rev:29105326,avg:832,biz:true},
+    {name:'花神祭',type:'春季',sess:31,att:26429,rev:25654327,avg:971,biz:true},
+    {name:'英語舞臺劇',type:'英語劇',sess:16,att:5842,rev:4417784,avg:756,biz:false}
+  ],
+  stageYoY:{
+    fy24:{sess:87,att:76333,rev:71085291,avg:931,bizSess:21,bizAtt:26853},
+    fy25:{sess:85,att:61047,rev:61792913,avg:1012,bizSess:8,bizAtt:7166}
+  },
+  stageVenue:[
+    {name:'台北親子劇場',sess:16,att:11919,rev:14170000},
+    {name:'臺北表演藝術中心',sess:4,att:4384,rev:5720616},
+    {name:'台中藝文中心',sess:4,att:4049,rev:4142123},
+    {name:'高雄文化中心',sess:4,att:3589,rev:3925220},
+    {name:'兒童新樂園',sess:16,att:4931,rev:3664478},
+    {name:'桃園展演',sess:8,att:6028,rev:6630388},
+    {name:'新竹表演廳',sess:4,att:2804,rev:2892569},
+    {name:'台中市葫蘆墩演奏廳',sess:4,att:2605,rev:2673645},
+    {name:'台南成大',sess:5,att:3837,rev:4243727},
+    {name:'新竹縣政府',sess:4,att:2260,rev:2412195},
+    {name:'高雄衛武營',sess:2,att:1566,rev:1915654},
+    {name:'中壢藝術館',sess:2,att:1792,rev:1886584},
+    {name:'台南成功大學',sess:2,att:1675,rev:1808942},
+    {name:'員林演藝廳',sess:2,att:1441,rev:1455439},
+    {name:'台北流行藝術中心',sess:2,att:2676,rev:381282},
+    {name:'企業包場（新竹）',sess:4,att:3836,rev:3238095,biz:true},
+    {name:'企業包場（台中）',sess:4,att:3330,rev:2428572,biz:true}
+  ],
+  stageCost:{
+    items:[
+      {cat:'編輯委託（制作費）',v:28219000,note:'ja:脚本・演出・舞台制作の外注費|zh:劇本・演出・舞台製作外包費'},
+      {cat:'手續費（チケット手数料）',v:3037000,note:'ja:KKTIX等チケット販売手数料|zh:KKTIX等票務平台手續費'},
+      {cat:'促銷費',v:1230000,note:'ja:プロモーション費用|zh:促銷費用'},
+      {cat:'廣告宣傳',v:619000,note:'ja:維肯・年代網際等|zh:維肯・年代網際等'},
+      {cat:'委託處理',v:467000,note:'ja:その他外注|zh:其他委外'},
+      {cat:'車旅費・運送費',v:757000,note:'ja:巡回輸送・移動費|zh:巡迴運輸・差旅費'},
+      {cat:'工讀生薪資',v:334000,note:'ja:公演スタッフアルバイト|zh:演出工讀人員薪資'},
+      {cat:'その他',v:291000,note:''}
+    ],
+    total:34954000,rev:62633663
+  },
+  stageMonth:[1886584,8958711,3514892,5536407,8636406,5102217,3664478,381282,0,7198971,6410837,10502128],
+  licMonths:['202504','202505','202506','202507','202508','202509','202510','202511','202512','202601','202602'],
+  licMLbl:['25/04','25/05','25/06','25/07','25/08','25/09','25/10','25/11','25/12','26/01','26/02'],
+  licCat:{
+    md:[6153953,343304,1847474,2048445,1319677,371124,3324980,399236,693542,3389183,945773],
+    an:[1800529,23337,111087,86512,94386,50631,48732,136665,39501,111081,0]
+  },
+  licVendors:[
+    {name:'維新',cat:'MD',total:7634366},
+    {name:'幫寶適(台灣)',cat:'MD',total:4562400},
+    {name:'國泰置地',cat:'MD',total:2300421},
+    {name:'東森',cat:'AN',total:1608790},
+    {name:'幫寶適(香港)',cat:'MD',total:1568658},
+    {name:'神寶醫資',cat:'MD',total:1330000},
+    {name:'悠活原力',cat:'MD',total:1089935},
+    {name:'火星生技',cat:'MD',total:997117}
+  ],
+  kyoDrill:{
+    hc:{
+      labs:['薪資','獎金','法定福利金','退休金準備','職工福利金','教育訓練'],
+      vals:[35062000,5073000,3939000,1856000,691000,395000]
+    },
+    gm:{
+      labs:['租金支出','折舊費用','雜費','勞務費','手續費','保險費','水電費'],
+      vals:[11681000,8514000,3310000,1536000,1333000,765000,548000]
+    },
+    opex:{
+      labs:['委託處理','促銷費','廣告宣傳','電報電話費','車旅費','運送費'],
+      vals:[15325000,5370000,2534000,864000,213000,206000]
+    },
+    ito:[
+      {n:'元凱資訊股份有限公司',v:4248581,note:'ja:ITシステム保守・開発|zh:IT系統維護開發'},
+      {n:'直達商業股份有限公司',v:3221900,note:'ja:業務委託|zh:業務委託'},
+      {n:'奇煜科技有限公司',v:1233228,note:'ja:デジタルマーケ|zh:數位行銷'},
+      {n:'台灣資誠國際有限公司',v:952518,note:'ja:コンサルティング|zh:顧問服務'},
+      {n:'海超數位整合有限公司',v:725000,note:'ja:デジタル|zh:數位整合'},
+      {n:'太乙光國際股份有限公司',v:492744,note:''},
+      {n:'鼎新電腦股份有限公司',v:451183,note:'ja:ERPサポート|zh:ERP支援'},
+      {n:'酷必資訊股份有限公司',v:441252,note:''},
+      {n:'雲發互動科技有限公司',v:348235,note:''},
+      {n:'精誠科技整合股份有限公司',v:335132,note:''},
+      {n:'齊發電腦有限公司',v:296038,note:''},
+      {n:'景竣實業股份有限公司',v:260444,note:''},
+      {n:'維肯媒體股份有限公司',v:227638,note:''},
+      {n:'易得雲端股份有限公司',v:153040,note:''},
+      {n:'新加坡商鈦坦科技股份有限公司台灣分公司',v:120311,note:'ja:Scrum|zh:Scrum'},
+      {n:'その他8社',v:479457,note:''}
+    ],
+    rent:[
+      {n:'翔得捷物流股份有限公司',v:4945719,note:'ja:物流倉庫賃借|zh:物流倉庫租金'},
+      {n:'第二計劃股份有限公司',v:2616702,note:'ja:事務所賃借|zh:辦公室租金'},
+      {n:'數位通國際網路股份有限公司',v:897600,note:'ja:サーバー・回線|zh:伺服器機房'},
+      {n:'林姿秀',v:550000,note:'ja:個人大家|zh:個人房東'},
+      {n:'王春蓮',v:522500,note:'ja:個人大家|zh:個人房東'},
+      {n:'理想生活計劃股份有限公司',v:513333,note:''},
+      {n:'黃亮珊',v:270000,note:'ja:個人大家|zh:個人房東'},
+      {n:'邱亭維',v:252000,note:'ja:個人大家|zh:個人房東'},
+      {n:'匯能數位整合有限公司',v:136191,note:''}
+    ],
+    ad:[
+      {n:'桑笛數位行銷有限公司',v:1339956,note:'ja:デジタル広告|zh:數位廣告'},
+      {n:'傑思愛德威媒體股份有限公司',v:533334,note:'ja:メディア広告|zh:媒體廣告'},
+      {n:'樂飛科技股份有限公司',v:198936,note:''},
+      {n:'鼎鼎聯合行銷股份有限公司',v:101720,note:''},
+      {n:'その他6社',v:360054,note:''}
+    ],
+    misc:[
+      {n:'國稅局(各類扣繳稅款、營業稅)',v:1434830,note:'ja:税金・固定|zh:稅金固定'},
+      {n:'奇煜科技有限公司',v:315858,note:''},
+      {n:'快克利有限公司',v:276425,note:''},
+      {n:'宜睿智慧股份有限公司',v:222942,note:''},
+      {n:'友利綜合管理顧問有限公司',v:220000,note:''},
+      {n:'財團法人台灣玩具暨生活用品研發檢測中心',v:111852,note:'ja:製品検査|zh:商品檢驗'},
+      {n:'その他',v:728093,note:''}
+    ],
+    dept:[
+      {dept:'財務',cat:'ja:折舊費用|zh:折舊費用',v:8514354},
+      {dept:'物流',cat:'ja:租金（倉庫）|zh:租金（倉庫）',v:5417147},
+      {dept:'總務',cat:'ja:租金（事務所）|zh:租金（辦公室）',v:5255156},
+      {dept:'財務',cat:'ja:雜費|zh:雜費',v:1857669},
+      {dept:'財務',cat:'ja:勞務費|zh:勞務費',v:1411393},
+      {dept:'財務',cat:'ja:手續費|zh:手續費',v:1333492},
+      {dept:'資訊',cat:'ja:租金（サーバー）|zh:租金（伺服器）',v:1008200},
+      {dept:'資訊',cat:'ja:雜費|zh:雜費',v:726452},
+      {dept:'總務',cat:'ja:雜費|zh:雜費',v:566369},
+      {dept:'總務',cat:'ja:保險費|zh:保險費',v:559394},
+      {dept:'總務',cat:'ja:水電費|zh:水電費',v:547815},
+      {dept:'人事課',cat:'ja:保險費|zh:保險費',v:205807},
+      {dept:'法務課',cat:'ja:雜費|zh:雜費',v:154543},
+      {dept:'法務課',cat:'ja:勞務費（弁護士）|zh:勞務費（律師）',v:125000},
+      {dept:'經營計畫',cat:'ja:研究開發|zh:研究開發',v:100000}
+    ]
+  },
+  costMatrix:{
+    bizIds:['gk','st','lc','hb','mr','kd','ks','ky'],
+    cost:  [21075000,28219000,1936000,10378000,1075000,469000,2452000,-7598000],
+    opex:  [9151000,3365000,3897000,3839000,599000,7353000,1026000,24630000],
+    gm:    [120000,3037000,120000,7000,11000,293000,0,46558000],
+    hc:    [11000,334000,0,7000,11000,0,0,28003000]
+  },
+  licDetail:[
+    {n:'維新',cat:'MD授權',div:'好園地',fy24:5192579,fy25:7634366,fy25m:[4299350,0,79632,977984,0,0,114286,0,0,1417996,745118],paid:6,pat:'spot'},
+    {n:'幫寶適(台灣)',cat:'MD授權',div:'自社',fy24:5120675,fy25:4562400,fy25m:[1096800,0,818700,381900,0,0,1065000,0,0,1200000,0],paid:5,pat:'spot'},
+    {n:'國泰(桃園置地營業所)',cat:'MD授權',div:'自社',fy24:2816519,fy25:2300421,fy25m:[0,233024,263596,254294,270119,252966,200470,254772,195122,211315,164743],paid:10,pat:'regular'},
+    {n:'東森',cat:'卡通',div:'自社',fy24:1761029,fy25:1608790,fy25m:[1608790,0,0,0,0,0,0,0,0,0,0],paid:1,pat:'oneshot'},
+    {n:'幫寶適(香港)',cat:'MD授權',div:'自社',fy24:1795580,fy25:1568658,fy25m:[421155,0,237022,225107,0,0,378817,0,0,306557,0],paid:5,pat:'spot'},
+    {n:'神寶醫資股份有限公司',cat:'MD授權',div:'自社',fy24:0,fy25:1330000,fy25m:[0,0,0,0,0,0,1330000,0,0,0,0],paid:1,pat:'oneshot'},
+    {n:'悠活原力股份有限公司',cat:'MD授權',div:'好園地',fy24:0,fy25:1089935,fy25m:[0,0,0,0,946000,0,0,0,0,143935,0],paid:2,pat:'oneshot'},
+    {n:'火星生技',cat:'MD授權',div:'自社',fy24:91290,fy25:997117,fy25m:[0,0,352800,0,0,0,145897,0,498420,0,0],paid:3,pat:'spot'},
+    {n:'根華',cat:'MD授權',div:'好園地',fy24:617979,fy25:522342,fy25m:[74520,0,95724,55440,80100,0,50760,65400,0,100398,0],paid:7,pat:'spot'},
+    {n:'台灣大哥大',cat:'卡通',div:'自社',fy24:476946,fy25:447943,fy25m:[27391,23337,109282,47977,51111,47310,44718,36465,34831,25309,0],paid:10,pat:'regular'},
+    {n:'家樂寶',cat:'MD授權',div:'好園地',fy24:236160,fy25:314160,fy25m:[216096,0,0,264,0,43200,0,54600,0,0,0],paid:4,pat:'spot'},
+    {n:'飛行國際',cat:'卡通',div:'自社',fy24:0,fy25:252738,fy25m:[0,0,0,35000,40000,0,0,95238,0,82500,0],paid:4,pat:'spot'},
+    {n:'愛奇藝',cat:'卡通',div:'自社',fy24:328695,fy25:164348,fy25m:[164348,0,0,0,0,0,0,0,0,0,0],paid:1,pat:'oneshot'},
+    {n:'敦景',cat:'MD授權',div:'好園地',fy24:346614,fy25:152630,fy25m:[0,62880,0,3456,23458,4608,39750,2592,0,8982,6912],paid:8,pat:'regular'},
+    {n:'須彌攝影設計有限公司',cat:'MD授權',div:'自社',fy24:0,fy25:150000,fy25m:[0,0,0,150000,0,0,0,0,0,0,0],paid:1,pat:'oneshot'},
+    {n:'瑞展創意',cat:'MD授權',div:'自社',fy24:0,fy25:113822,fy25m:[0,21600,0,0,0,70350,0,21872,0,0,0],paid:3,pat:'spot'},
+    {n:'桃園大眾捷運',cat:'MD授權',div:'自社',fy24:92063,fy25:46032,fy25m:[46032,0,0,0,0,0,0,0,0,0,0],paid:1,pat:'oneshot'},
+    {n:'遠傳VOD',cat:'卡通',div:'自社',fy24:0,fy25:28854,fy25m:[0,0,1805,3535,3275,3321,4014,4962,4670,3272,0],paid:8,pat:'regular'},
+    {n:'中國信託育樂股份有限公司',cat:'MD授權',div:'自社',fy24:0,fy25:29000,fy25m:[0,0,0,0,0,0,0,0,0,0,29000],paid:1,pat:'oneshot'},
+    {n:'璽福創意股份有限公司',cat:'MD授權',div:'自社',fy24:0,fy25:25800,fy25m:[0,25800,0,0,0,0,0,0,0,0,0],paid:1,pat:'oneshot'}
+  ],
+  bcl:{total:212059,valid:148349,invalid:63710,
+    age:{ss:5867,s:10723,a:11630,b:42860,c:44410,d:31256,unk:1603},
+    seg7:{preg:1603,s06:3180,ss712:2687,s1324:10723,aa2536:11630,a3760:42860,b61p:75666},
+    byYear:[
+      {yr:2026,bcl:3347,rank:'A孕期'},
+      {yr:2025,bcl:6338,rank:'S/SS'},
+      {yr:2024,bcl:11228,rank:'S'},
+      {yr:2023,bcl:12214,rank:'AA'},
+      {yr:2022,bcl:21257,rank:'A'},
+      {yr:2021,bcl:24007,rank:'A'},
+      {yr:2020,bcl:23097,rank:'B'}
+    ],
+    mLbl24:['24/04','24/05','24/06','24/07','24/08','24/09','24/10','24/11','24/12','25/01','25/02','25/03','25/04','25/05','25/06','25/07','25/08','25/09','25/10','25/11','25/12','26/01','26/02','26/03'],
+    mNewValid:[111,153,131,194,1508,2639,1582,1700,623,660,871,1761,3664,868,981,1522,1160,1395,2014,1506,1900,1843,2131,4263],
+    mNewInvalid:[33,29,30,45,377,775,375,420,107,133,223,426,916,189,377,493,325,276,407,270,390,308,304,261],
+    mCross:{
+      preg:[4,6,12,12,395,455,280,316,72,43,34,68,238,143,170,339,281,221,297,312,513,577,620,565],
+      s06:[9,5,12,21,325,718,304,368,125,94,149,376,846,105,105,160,110,150,178,155,221,220,272,593],
+      ss712:[8,16,19,28,195,496,227,243,90,79,127,290,646,141,117,253,123,194,208,162,319,150,234,600],
+      s1324:[28,40,36,63,391,734,572,468,209,224,253,513,997,237,231,322,252,384,471,374,412,286,444,1037],
+      aa2536:[21,27,22,29,125,104,119,144,64,136,161,302,523,149,162,231,195,248,365,269,228,209,270,729],
+      a3760:[23,49,24,31,51,102,60,119,41,58,100,166,304,66,125,142,124,133,338,170,121,246,182,536],
+      b61p:[18,10,6,10,26,30,20,42,22,26,47,46,110,27,71,75,75,65,157,64,86,155,109,203]
+    },
+    srcBlock:[
+      {name:'全管道',valid:120911,invalid:57743},
+      {name:'心測',valid:9596,invalid:2607},
+      {name:'SHOPLINE',valid:864,invalid:59},
+      {name:'春季舞台劇',valid:828,invalid:66},
+      {name:'WEB-Welcome',valid:2158,invalid:406},
+      {name:'LineOA',valid:2041,invalid:415},
+      {name:'明治',valid:630,invalid:109},
+      {name:'英語劇',valid:425,invalid:73},
+      {name:'揆眾婦幼展',valid:1478,invalid:362},
+      {name:'大樹',valid:1135,invalid:272},
+      {name:'永生',valid:964,invalid:287},
+      {name:'樂飛發票',valid:1018,invalid:729}
+    ],
+    src:[{name:'全管道',v:120911},{name:'心測',v:9596},{name:'WEB Welcome',v:2158},{name:'LineOA',v:2041},{name:'婦幼展',v:1478},{name:'大樹',v:1135}]
+  },
+  ltv:{customers:12641,avgLtv:4880,medLtv:3218,
+    freq:[5751,3478,1618,805,404,585],
+    freqLbl:['1回','2回','3回','4回','5回','6回+'],
+    bound:{yes:{tx:18154,rev:42125369},no:{tx:9613,rev:19557761}},
+    monthly:[3293922,8324032,3866268,3520713,3830554,2724053,5818903,5883553,4062017,5765598,3412499,11181018]
+  },
+  ch10:{
+    WEB:{rev25:21910467,rev24:17425650,cnt25:20540,aov:1066,custCnt:6327,avgLtv:3831,bindRate:51.7,repeatRate:17.8,crossRate:25.5,skuCnt:214,top10conc:71.3,
+      biz:{gk:{rev:15830193,rev24:12838131,cnt:6955,aov:2276},hb:{rev:4621248,rev24:4218378,cnt:12019,aov:384},mf:{rev:1459026,rev24:369141,cnt:1566,aov:932}},
+      top6:[{n:'好情緒EQ X 品格人際套組',rev:2657290,cnt:1269,aov:2094},{n:'語彙表達‧智育學習套組',rev:2384836,cnt:511,aov:4667},{n:'和巧虎一起說英語Plus',rev:2107232,cnt:461,aov:4571},{n:'寶寶生活好習慣學習套組A',rev:1981497,cnt:484,aov:4094},{n:'巧虎雙語點讀圖鑑',rev:1533235,cnt:671,aov:2285},{n:'點讀巧比思考力遊戲組',rev:1464175,cnt:769,aov:1904}],
+      ltvDist:{'〜2K':2136,'2-4K':2001,'4-6K':1137,'6-10K':681,'10K+':372},
+      freqDist:{'1回':5200,'2回':816,'3回':194,'4-5回':83,'6回+':34}},
+    TM:{rev25:21282501,rev24:21904565,cnt25:9938,aov:2141,custCnt:3671,avgLtv:5852,bindRate:97.5,repeatRate:22.6,crossRate:27.0,skuCnt:87,top10conc:88.8,
+      biz:{gk:{rev:19605057,rev24:21130753,cnt:8056,aov:2434},hb:{rev:1101594,rev24:605660,cnt:1457,aov:756},mf:{rev:575850,rev24:168152,cnt:425,aov:1355}},
+      top6:[{n:'好情緒EQ X 品格人際套組',rev:3411134,cnt:1628,aov:2095},{n:'和巧虎一起說英語Plus',rev:3071713,cnt:672,aov:4571},{n:'注音套組2.0',rev:2673094,cnt:877,aov:3048},{n:'語彙表達‧智育學習套組',rev:2216824,cnt:475,aov:4667},{n:'和巧虎一起說英語套組進階版',rev:1971559,cnt:459,aov:4295},{n:'寶寶生活好習慣學習套組A',rev:1915995,cnt:467,aov:4103}],
+      ltvDist:{'〜2K':206,'2-4K':1257,'4-6K':894,'6-10K':818,'10K+':496},
+      freqDist:{'1回':2841,'2回':603,'3回':149,'4-5回':64,'6回+':14}},
+    KOL:{rev25:15486013,rev24:18633063,cnt25:6696,aov:2312,custCnt:2643,avgLtv:6037,bindRate:47.4,repeatRate:16.5,crossRate:19.0,skuCnt:48,top10conc:94.0,
+      biz:{gk:{rev:14611315,rev24:18376329,cnt:5582,aov:2618},hb:{rev:389922,rev24:223545,cnt:840,aov:464},mf:{rev:484776,rev24:33189,cnt:274,aov:1769}},
+      top6:[{n:'寶寶生活好習慣學習套組A',rev:2345863,cnt:573,aov:4094},{n:'好情緒EQ X 品格人際套組',rev:2215458,cnt:1058,aov:2094},{n:'語彙表達‧智育學習套組',rev:2160820,cnt:463,aov:4667},{n:'和巧虎一起說英語Plus',rev:1887824,cnt:413,aov:4571},{n:'和巧虎一起學數學套組',rev:1514845,cnt:497,aov:3048},{n:'巧虎雙語點讀圖鑑',rev:1400705,cnt:613,aov:2285}],
+      ltvDist:{'〜2K':155,'2-4K':919,'4-6K':507,'6-10K':606,'10K+':456},
+      freqDist:{'1回':2206,'2回':354,'3回':63,'4-5回':15,'6回+':5},
+      monthly:[366872,3589960,311892,322898,602029,528094,1224955,1606756,141203,2005626,425231,4360497]},
+    EC:{rev25:6596275,rev24:4381155,cnt25:5450,aov:1210,custCnt:null,avgLtv:null,bindRate:null,repeatRate:null,crossRate:null,skuCnt:59,top10conc:84.3,
+      biz:{gk:{rev:5288487,rev24:3160007,cnt:2365,aov:2236},hb:{rev:1307788,rev24:1221148,cnt:3085,aov:424},mf:{rev:0,rev24:0,cnt:0,aov:0}},
+      top6:[{n:'點讀巧比思考力遊戲組',rev:1014837,cnt:528,aov:1922},{n:'好情緒EQ X 品格人際套組',rev:795725,cnt:380,aov:2094},{n:'寶寶生活好習慣學習套組A',rev:759169,cnt:183,aov:4148},{n:'巧虎雙語點讀圖鑑',rev:685625,cnt:314,aov:2184},{n:'注音套組2.0',rev:606552,cnt:199,aov:3048},{n:'和巧虎一起說英語Plus',rev:575947,cnt:126,aov:4571}],
+      ltvDist:null,freqDist:null}
+  },
+  buyer:{
+    total:12641,totalRev:61683000,
+    seg:[
+      {id:'HIGH',cnt:2533,avgLtv:11633,bindRate:74,repeatRate:55,crossRate:49,tmRate:39,totalRev:29455769},
+      {id:'MID', cnt:3788,avgLtv:5122, bindRate:67,repeatRate:21,crossRate:33,tmRate:36,totalRev:19402136},
+      {id:'LOW', cnt:6320,avgLtv:2028, bindRate:59,repeatRate:3, crossRate:10,tmRate:21,totalRev:12813817}
+    ],
+    bizPat:[
+      {pat:'僅學習商品',       cnt:7093, avgLtv:4762, rev:33779068},
+      {pat:'學習+周邊',      cnt:2746, avgLtv:7181, rev:19718312},
+      {pat:'僅周邊商品',       cnt:2072, avgLtv:1356, rev:2808992},
+      {pat:'學習+周邊+MF',   cnt:123,  avgLtv:14520,rev:1785983},
+      {pat:'僅Mirafeel',         cnt:366,  avgLtv:4353, rev:1593090},
+      {pat:'學習+MF',        cnt:108,  avgLtv:8357, rev:902607},
+      {pat:'學習+周邊+巧連智', cnt:53,  avgLtv:12661,rev:671015},
+      {pat:'周邊+MF',        cnt:61,   avgLtv:4540, rev:276911}
+    ],
+    chSeg:[
+      {ch:'TM', bind:'y',cnt:3580,avgLtv:5867,repeat:22.9,rev:21002394,share:34.0},
+      {ch:'WEB',bind:'y',cnt:3269,avgLtv:4367,repeat:23.2,rev:14274586,share:23.1},
+      {ch:'WEB',bind:'n',cnt:3058,avgLtv:3259,repeat:12.0,rev:9966235, share:16.2},
+      {ch:'KOL',bind:'n',cnt:1389,avgLtv:5774,repeat:12.6,rev:8019630, share:13.0},
+      {ch:'KOL',bind:'y',cnt:1254,avgLtv:6330,repeat:20.9,rev:7938293, share:12.9},
+      {ch:'TM', bind:'n',cnt:91,  avgLtv:5297,repeat:11.0,rev:481992,  share:0.8}
+    ],
+    bindTiming:[
+      {cat:'1年以上前綁定',cnt:5088,pct:62.8},
+      {cat:'購買前1年以内',  cnt:1501,pct:18.5},
+      {cat:'購買當月綁定',   cnt:1514,pct:18.7}
+    ],
+    freqBind:[
+      {tx:'1回', n:3986, y:6261, ltv_n:3476, ltv_y:4017},
+      {tx:'2回', n:446,  y:1327, ltv_n:7112, ltv_y:7907},
+      {tx:'3回', n:76,   y:330,  ltv_n:12203,ltv_y:11752},
+      {tx:'4-5回',n:22,  y:140,  ltv_n:16089,ltv_y:16445},
+      {tx:'6回+', n:8,   y:45,   ltv_n:19794,ltv_y:30942}
+    ],
+    firstBuy:[
+      {m:'25/04',cnt:828, ltv:5778,repeat:28.0},
+      {m:'25/05',cnt:1989,ltv:5850,repeat:33.4},
+      {m:'25/06',cnt:1028,ltv:4549,repeat:24.2},
+      {m:'25/07',cnt:949, ltv:4100,repeat:19.5},
+      {m:'25/08',cnt:945, ltv:4595,repeat:21.4},
+      {m:'25/09',cnt:699, ltv:3844,repeat:16.7},
+      {m:'25/10',cnt:1091,ltv:4911,repeat:21.4},
+      {m:'25/11',cnt:1041,ltv:5324,repeat:16.0},
+      {m:'25/12',cnt:765, ltv:4547,repeat:12.4},
+      {m:'26/01',cnt:1047,ltv:4588,repeat:9.3},
+      {m:'26/02',cnt:719, ltv:4073,repeat:6.4},
+      {m:'26/03',cnt:1540,ltv:4906,repeat:6.8}
+    ]
+  }
+};
+
+let LANG='zh';
+const CHART_INSTANCES={};
+
+const M=v=>((v/1e6).toFixed(1));
+const fmtN=v=>{if(v>=0)return '+'+M(v)+'M';return '▲'+M(Math.abs(v))+'M';};
+const fmtNTD=v=>{const m=Math.abs(v)/1e6;const s=m.toFixed(1)+'M';return v<0?'▲'+s:s;};
+const pct=(a,b)=>(b?((a/b)*100).toFixed(1)+'%':'—');
+function el(id){return document.getElementById(id)}
+function t(k){return T[LANG][k]||k}
+// 管道ラベル変換（zh表示時に「その他」→「其他」等）
+const CH_LABEL_MAP={zh:{'その他':'其他','舞台劇':'舞台劇','授權':'授權','經銷商':'經銷商'}};
+function chLbl(key){return(LANG==='zh'&&CH_LABEL_MAP.zh[key])||key;}
+function applyI18n(){
+  document.querySelectorAll('[data-k]').forEach(e=>{const k=e.dataset.k;if(T[LANG][k]!==undefined)e.textContent=T[LANG][k];});
+  document.documentElement.lang=LANG==='ja'?'ja':'zh-TW';
+}
+function setL(l){
+  LANG=l;
+  el('bja').className=l==='ja'?'on':'';
+  el('bzh').className=l==='zh'?'on':'';
+  applyI18n();
+  buildAllContent();
+  initAllCharts();
+  renderLanding(l);
+}
+function showTab(id){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('on'));
+  el(id).classList.add('on');
+  document.querySelectorAll('.tab-btn')[['t1','t2','t8','t9','t10','t3','t4','t6','t7','t5'].indexOf(id)].classList.add('on');
+  initChartsFor(id);
+}
+function showSub(grp,id){
+  document.querySelectorAll('.sp[data-g='+grp+']').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.sb[data-g='+grp+']').forEach(b=>b.classList.remove('on'));
+  el(id).classList.add('on');
+  document.querySelector('.sb[data-sid='+id+']').classList.add('on');
+  if(grp==='t6s')initT6();
+  else if(grp==='t10s')initT10();
+  else initChartsFor('t2');
+}
+function toggleIns(el){const b=el.nextElementSibling;if(!b)return;b.style.display=b.style.display==='block'?'none':'block';const arrow=el.querySelector('span');if(arrow)arrow.childNodes[0].textContent=(b.style.display==='block'?'▼ ':'▶ ');}
+function mkChart(id,cfg){
+  if(CHART_INSTANCES[id]){CHART_INSTANCES[id].destroy();delete CHART_INSTANCES[id];}
+  const c=el(id);if(!c)return;
+  try{CHART_INSTANCES[id]=new Chart(c,cfg);}catch(e){c.parentElement.innerHTML='<p style="color:var(--text3);padding:12px">グラフ読込失敗</p>';}
+}
+function valLbl(clr,fsz,fmt){return{id:'valLbl',afterDatasetsDraw(chart){chart.data.datasets.forEach((ds,di)=>{const meta=chart.getDatasetMeta(di);meta.data.forEach((bar,i)=>{const v=ds.data[i];if(v===null||v===undefined||Array.isArray(v)||v===0)return;const ctx=chart.ctx;ctx.save();ctx.fillStyle=clr||'#1a1916';ctx.font=(fsz||'10px')+' '+'SF Mono,Consolas,monospace';ctx.textAlign='center';ctx.textBaseline='bottom';const x=bar.x,y=bar.y;let txt;if(fmt)txt=fmt(v);else if(Math.abs(v)>=1e5)txt=M(v)+'M';else txt=typeof v==='number'?v.toFixed(0):String(v);ctx.fillText(txt,x,y-2);ctx.restore();});});}};}
+
+const PRODS=[
+  {nm:'英語PLUS+初階',nm_zh:'英語PLUS+初階版',price:4800,ym:'202407',clr:'#AED6F1'},
+  {nm:'生活好習慣',nm_zh:'生活好習慣套組',price:4299,ym:'202410',clr:'#FFB7C5'},
+  {nm:'注音拼音',nm_zh:'注音拼音套組',price:3200,ym:'202411',clr:'#B5EAD7'},
+  {nm:'好情緒EQ',nm_zh:'好情緒EQ套組',price:2199,ym:'202505',clr:'#FFF4A3'},
+  {nm:'語彙・智育',nm_zh:'語彙智育套組',price:4900,ym:'202510',clr:'#FFDBA4'},
+  {nm:'雙語點讀圖鑑',nm_zh:'雙語點讀圖鑑',price:2399,ym:'202601',clr:'#C7CEEA'},
+  {nm:'數學套組',nm_zh:'數學套組',price:3200,ym:'202603',clr:'#A8D5B5'},
+  {nm:'點讀大冒険',nm_zh:'點讀大冒険',price:2999,ym:'202603',clr:'#E8A598'}
+];
+let compSeries=[];let compType='line';
+const COMP_CLRS=['#A8C5DA','#E8A598','#C5B4E3','#A8D5B5','#F5D4A0','#D4C5B0'];
+const COMP_CH={gk:['全体','WEB','TM','EC','KOL','經銷商','その他'],hb:['全体','WEB','TM','EC','KOL','舞台劇','授權','その他'],mr:['全体','WEB','TM','KOL']};
+function buildChOpts(bizId){return(COMP_CH[bizId]||[]).map(c=>'<option value="'+c+'">'+chLbl(c)+'</option>').join('');}
+function addCompSeries(){
+  if(compSeries.length>=6)return;
+  const biz=el('sel-biz').value;const ch=el('sel-ch').value;
+  if(compSeries.find(s=>s.biz===biz&&s.ch===ch))return;
+  const nm={gk:LANG==='ja'?'学習':'學習',hb:LANG==='ja'?'周辺':'周邊',mr:'Mirafeel'};
+  compSeries.push({biz,ch,label:nm[biz]+'×'+ch,clr:COMP_CLRS[compSeries.length]});
+  drawCompChart();
+}
+function removeCompSeries(i){compSeries.splice(i,1);compSeries.forEach((s,j)=>s.clr=COMP_CLRS[j]);drawCompChart();}
+function clearCompSeries(){compSeries=[];drawCompChart();}
+function setCompType(tp){
+  compType=tp;
+  ['line','bar'].forEach(t=>{const b=el('ctype-'+t);if(b)b.className='comp-type'+(t===tp?' on':'');});
+  drawCompChart();
+}
+function drawCompChart(){
+  const tags=el('comp-tags');const hint=el('comp-hint');
+  if(tags)tags.innerHTML=compSeries.map((s,i)=>'<span style="padding:3px 10px;background:'+s.clr+';border-radius:12px;font-size:11px;color:#333">'+s.label+'<span onclick="removeCompSeries('+i+')" style="cursor:pointer;margin-left:5px;color:#666">×</span></span>').join('');
+  if(hint)hint.style.display=compSeries.length?'none':'block';
+  if(!compSeries.length){if(CHART_INSTANCES['cvs-comp']){CHART_INSTANCES['cvs-comp'].destroy();delete CHART_INSTANCES['cvs-comp'];}return;}
+  const isBar=compType==='bar';
+  const datasets=compSeries.map(s=>{
+    const chData=D.mByCh[s.biz];
+    const vals=s.ch==='全体'?D.mLbl.map((_,i)=>Object.values(chData).reduce((a,arr)=>a+(arr[i]||0),0)):(chData[s.ch]||D.mLbl.map(()=>0));
+    return{label:s.label,data:vals,borderColor:s.clr,backgroundColor:s.clr+(isBar?'cc':'44'),borderWidth:2,tension:0.3,pointRadius:3,fill:false,stack:isBar?'s':undefined};
+  });
+  mkChart('cvs-comp',{type:isBar?'bar':'line',data:{labels:D.mLbl,datasets},options:{...baseOpts,
+    scales:{x:{stacked:isBar,grid:{display:false},ticks:{color:'#9c9a94',font:{size:10}}},y:{stacked:isBar,grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10},callback:v=>v+'K'}}},
+    plugins:{...baseOpts.plugins,legend:{display:true,position:'top',labels:{font:{size:10},padding:8,boxWidth:10,color:'#6b6860'}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+ctx.raw+'K NTD'}}}}});
+}
+function initT2Comp(){
+  const bs=el('sel-biz');if(bs)bs.onchange=function(){const sc=el('sel-ch');if(sc)sc.innerHTML=buildChOpts(this.value);};
+  if(compSeries.length)drawCompChart();
+}
+
+function buildTabs(){
+  const bar=el('tabs');bar.innerHTML='';
+  const tabs=['t1','t2','t8','t9','t10','t3','t4','t6','t7','t5'];
+  tabs.forEach((id,i)=>{const b=document.createElement('button');b.className='tab-btn'+(i===0?' on':'');b.textContent=t('tab')[i];b.onclick=()=>showTab(id);bar.appendChild(b);});
+}
+
+function kpiCard(lbl,val,sub,cls){return`<div class="kpi ${cls||''}"><div class="kpi-lbl">${lbl}</div><div class="kpi-val ${cls||''}">${val}</div>${sub?`<div class="kpi-sub">${sub}</div>`:''}</div>`;}
+
+function buildT1(){
+  const p=el('t1');
+  const total_rev=D.pl.filter(r=>r.id!=='ky').reduce((a,r)=>a+r.rev,0);
+  const biz_profit=D.pl.filter(r=>r.id!=='ky').reduce((a,r)=>a+r.profit,0);
+  const op=D.pl.reduce((a,r)=>a+r.profit,0);
+  const ebitda=-5817759;// from PL sheet
+
+  p.innerHTML=`
+  <div class="kpi-strip">
+    ${kpiCard(t('kpi_rev'),'181.1M',t('kpi_unit'),'neutral')}
+    ${kpiCard(t('kpi_biz'),'+81.3M',t('kpi_unit'),'pos')}
+    ${kpiCard(t('kpi_kyotsu'),'▲91.6M',t('kpi_unit'),'neg')}
+    ${kpiCard(t('kpi_op'),'▲10.3M',t('kpi_unit'),'neg')}
+    ${kpiCard(t('kpi_ebitda'),'▲8M',t('kpi_ebitda_sub'),'neg')}
+  </div>
+  <div class="cw"><div class="ct" data-k="c1_wf"></div><div style="height:360px"><canvas id="cvs-wf" role="img" aria-label="P&L Bridge: 事業利益81.3M→共通費▲91.6M→営業利潤▲10.3M">事業利益81.3M 共通費▲91.6M 営業利潤▲10.3M</canvas></div><div class="cn" data-k="c1_wf_n"></div></div>
+  <div class="grid2">
+    <div class="cw"><div class="ct" data-k="c1_rev"></div><div style="height:220px"><canvas id="cvs-rev-donut" role="img" aria-label="Revenue by Business">学習57.5M 舞台劇62.6M 授權金26.2M</canvas></div></div>
+    <div class="cw"><div class="ct" data-k="c1_mg"></div><div style="height:220px"><canvas id="cvs-margin" role="img" aria-label="Profit Margin by Business">授權金77% 学習47% 舞台劇44%</canvas></div></div>
+  </div>
+  <div class="cw"><div class="ct" data-k="c1_jpy"></div><div style="height:240px"><canvas id="cvs-jpy" role="img" aria-label="JPY Adj.EBITDA: 学習周辺144M 舞台劇125M IP事業97M 共通費▲406M 合計▲8M">学習周辺売上404M EBITDA144M 舞台劇売上282M EBITDA125M IP事業売上135M EBITDA97M 共通費▲406M 為替+19M 合計▲8M</canvas></div><div class="cn" data-k="c1_jpy_n"></div></div>
+  <div class="cw"><div class="ct" data-k="c1_pl"></div><div class="tbl-wrap" id="tbl-pl"></div></div>
+  <div class="ins"><div class="ins-h" onclick="toggleIns(this)"><span>▶ ${t('insight')}</span><span style="font-size:10px;color:var(--text3)">${t('open_hint')}</span></div><div class="ins-b">${t('ins1')}</div></div>`;
+
+  applyI18n();
+  buildPLTable();
+}
+
+function buildPLTable(){
+  const names=D.plNames[LANG];
+  const bizRows=D.pl.filter(r=>r.id!=='ky');
+  const subtotalRev=bizRows.reduce((a,r)=>a+r.rev,0);
+  const subtotalProfit=bizRows.reduce((a,r)=>a+r.profit,0);
+  let h=`<table><thead><tr><th>${t('col_biz')}</th><th class="r">${t('col_rev')}</th><th class="r">${t('col_gp')}</th><th class="r">${t('col_gpr')}</th><th class="r">${t('col_opex')}</th><th class="r">${t('col_hc')}</th><th class="r">${t('col_gm')}</th><th class="r">${t('col_op')}</th><th class="r">${t('col_opr')}</th></tr></thead><tbody>`;
+  D.pl.forEach((r,i)=>{
+    const costr=r.rev?pct(r.cost,r.rev):'—';
+    const opr=r.rev?pct(r.profit,r.rev):'—';
+    const pc=r.profit>=0?'pos':'neg';
+    const isKy=r.id==='ky';
+    if(isKy){
+      const stOpr=pct(subtotalProfit,subtotalRev);
+      h+=`<tr class="tr-sub"><td colspan="1"><strong>${t('col_subtotal')}</strong></td><td class="r"><strong>${fmtNTD(subtotalRev)}</strong></td><td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r pos"><strong>${fmtNTD(subtotalProfit)}</strong></td><td class="r pos"><strong>${stOpr}</strong></td></tr>`;
+    }
+    h+=`<tr class="${isKy?'tr-neg':(r.profit<0?'':'')}"><td>${names[i]}</td><td class="r">${r.rev?fmtNTD(r.rev):'—'}</td><td class="r">${r.cost?fmtNTD(r.cost):'—'}</td><td class="r">${costr}</td><td class="r">${r.opex?fmtNTD(-r.opex):'—'}</td><td class="r">${r.hc?fmtNTD(-r.hc):'—'}</td><td class="r">${r.gm?fmtNTD(-r.gm):'—'}</td><td class="r ${pc}">${fmtNTD(r.profit)}</td><td class="r">${r.rev?opr:'—'}</td></tr>`;
+  });
+  const totalRev=D.pl.reduce((a,r)=>a+r.rev,0);
+  const totalOp=D.pl.reduce((a,r)=>a+r.profit,0);
+  h+=`<tr class="tr-total"><td>${LANG==='ja'?'合計':'合計'}</td><td class="r">${fmtNTD(totalRev)}</td><td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r neg">${fmtNTD(totalOp)}</td><td class="r">—</td></tr>`;
+  h+=`</tbody></table>`;
+  el('tbl-pl').innerHTML=h;
+}
+
+function buildT2(){
+  const p=el('t2');
+  const gkT=Object.values(D.cubeCh.gk).reduce((a,v)=>a+v,0);
+  const hbT=Object.values(D.cubeCh.hb).reduce((a,v)=>a+v,0);
+  const mrT=Object.values(D.cubeCh.mr).reduce((a,v)=>a+v,0);
+  const isJa=LANG==='ja';
+  const bd=D.bizDetail;
+
+  function prodTbl(rows,totalRev){
+    const cols=[t('c2_col_prod'),t('c2_col_rev'),t('c2_col_cnt'),t('c2_col_aov'),t('c2_col_yoy')];
+    let h=`<div class="tbl-wrap"><table style="font-size:11.5px"><thead><tr>
+      ${cols.map((c,i)=>`<th${i>0?' class="r"':''}>${c}</th>`).join('')}
+    </tr></thead><tbody>`;
+    rows.forEach((r,i)=>{
+      const yoy=r.rev24>0?((r.rev/r.rev24-1)*100).toFixed(0)+'%':(isJa?'NEW':'NEW');
+      const yoyClr=r.rev24===0?'var(--text3)':parseFloat(yoy)>=0?'var(--green)':'var(--red)';
+      const share=(r.rev/totalRev*100).toFixed(0);
+      h+=`<tr${i===0?' style="background:var(--green-bg)"':''}>
+        <td style="font-size:11px">${r.n||r.lb||''}</td>
+        <td class="r">${(r.rev/1e6).toFixed(2)}M</td>
+        <td class="r">${(r.cnt||0).toLocaleString()}</td>
+        <td class="r" style="font-family:var(--mono)">${(r.aov||0).toLocaleString()}</td>
+        <td class="r" style="color:${yoyClr};font-weight:600">${yoy}</td>
+      </tr>`;
+    });
+    h+=`</tbody></table></div>`;
+    return h;
+  }
+
+  function repeatCard(singlePct,repeatPct,avgLtv,mfNote){
+    return`<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px">
+      <div style="flex:1;min-width:110px;background:#F5A8A022;border:1px solid #F5A8A0;border-radius:6px;padding:10px;text-align:center">
+        <div style="font-size:22px;font-weight:300;font-family:var(--mono);color:#B05040">${singlePct}%</div>
+        <div style="font-size:10px;color:var(--text2)">${isJa?'1回のみ購買':'只購買1次'}</div>
+      </div>
+      <div style="flex:1;min-width:110px;background:#B5EAD722;border:1px solid #B5EAD7;border-radius:6px;padding:10px;text-align:center">
+        <div style="font-size:22px;font-weight:300;font-family:var(--mono);color:#1d7a5f">${repeatPct}%</div>
+        <div style="font-size:10px;color:var(--text2)">${isJa?'2回以上購買':'購買2次以上'}</div>
+      </div>
+      <div style="flex:1;min-width:110px;background:#A8C5DA22;border:1px solid #A8C5DA;border-radius:6px;padding:10px;text-align:center">
+        <div style="font-size:18px;font-weight:300;font-family:var(--mono);color:#4A7A9B">${avgLtv.toLocaleString()}</div>
+        <div style="font-size:10px;color:var(--text2)">${isJa?'平均LTV (NTD)':'平均LTV (NTD)'}</div>
+      </div>
+    </div>${mfNote?`<div style="font-size:11px;padding:6px 10px;background:var(--amber-bg);border-radius:4px;color:var(--amber);margin-top:6px">${t('c2_mf_repeat')}</div>`:''}`;
+  }
+
+  p.innerHTML=`
+  <div class="kpi-strip">
+    ${kpiCard(t('s2a'),M(D.pl[0].rev)+'M',t('kpi_unit'),'neutral')}
+    ${kpiCard(t('s2b'),M(D.pl[3].rev)+'M',t('kpi_unit'),'neutral')}
+    ${kpiCard('Mirafeel',M(D.pl[4].rev)+'M',t('kpi_unit'),'neutral')}
+    ${kpiCard(isJa?'物販合計':'物販合計',M(D.pl[0].rev+D.pl[3].rev+D.pl[4].rev)+'M',t('kpi_unit'),'neutral')}
+  </div>
+  <div class="sbar">
+    <button class="sb on" data-g="s2" data-sid="s2a" onclick="showSub('s2','s2a')">${t('s2a')}</button>
+    <button class="sb" data-g="s2" data-sid="s2b" onclick="showSub('s2','s2b')">${t('s2b')}</button>
+    <button class="sb" data-g="s2" data-sid="s2c" onclick="showSub('s2','s2c')">Mirafeel</button>
+    <button class="sb" data-g="s2" data-sid="s2d" onclick="showSub('s2','s2d')">${isJa?'📊 比較系列':'📊 比較系列'}</button>
+  </div>
+
+  <!-- 學習商品 -->
+  <div id="s2a" class="sp on" data-g="s2">
+    <div class="kpi-strip">
+      ${kpiCard(isJa?'FY25売上':'FY25銷售額','58.5M','+3.3% FY24比','pos')}
+      ${kpiCard(isJa?'販売数量（有償）':'銷售數量（有償）','20,904',isJa?'個（+17.5%）':'個（+17.5%）','pos')}
+      ${kpiCard(isJa?'平均単価（有償）':'平均單價（有償）','2,797 NTD',isJa?'FY24比▲12.1%':'FY24比▲12.1%','neg')}
+      ${kpiCard(isJa?'新商品貢献':'新品貢獻','5本NEW',isJa?'好情緒EQ等':'好情緒EQ等','pos')}
+    </div>
+    <div class="cw"><div class="ct" data-k="c2m"></div><div style="height:200px"><canvas id="cvs-gk-m" role="img" aria-label="学習商品月次"></canvas></div></div>
+    <div class="grid2">
+      <div class="cw"><div class="ct" data-k="c2ch"></div><div style="height:180px"><canvas id="cvs-gk-ch" role="img" aria-label="学習商品チャネル"></canvas></div><div class="cn" data-k="c2gk_note" style="margin-top:6px;padding:6px 8px;background:var(--amber-bg);border-radius:4px;color:var(--amber)"></div></div>
+      <div class="cw"><div class="ct">${isJa?'FY24→FY25 比較（有償商品・FY24=100）':'FY24→FY25 比較（有償商品・FY24=100）'}</div><div style="height:180px"><canvas id="cvs-gk-yoy" role="img" aria-label="FY24FY25比較"></canvas></div><div class="cn" style="margin-top:4px;font-size:10.5px;color:var(--text3)">${isJa?'無償同梱品除外。棒上の数値はFY24比変化率。':'排除免費贈品。棒上數值為FY24比變化率。'}</div></div>
+    </div>
+    <div class="cw"><div class="ct" data-k="c2_gk_price"></div><div style="height:180px"><canvas id="cvs-gk-price" role="img" aria-label="学習商品価格帯分布"></canvas></div><div class="cn" data-k="c2_gk_price_n" style="margin-top:4px"></div></div>
+    <div class="cw"><div class="ct" data-k="c2_gk_repeat"></div>${repeatCard(bd.gk.singlePct,bd.gk.repeatPct,bd.gk.avgLtv,false)}</div>
+    <div class="ins"><div class="ins-h" onclick="toggleIns(this)"><span>▶ ${t('insight')}</span><span style="font-size:10px;color:var(--text3)">${t('open_hint')}</span></div><div class="ins-b">
+      <p><strong>${isJa?'数量増・単価減：FY25学習商品の本質（無償同梱品除外）。':'數量增・單價降：FY25學習商品本質（排除免費贈品）。'}</strong>${isJa?'販売数量+17.5%（17,798→20,904個）。一方、高単価の英語Plus・英語進階版が大幅減（▲68%）し中単価の好情緒EQ（2,090 NTD）が牽引したことで平均単価は3,182→2,797 NTDへ▲12.1%低下。売上+3.3%は数量増が支えた。':'銷售數量+17.5%（17,798→20,904個）。但高單價英語Plus・英語進階版大幅減少（▲68%），中單價好情緒EQ（2,090 NTD）引領，平均單價從3,182→2,797 NTD下降▲12.1%。銷售額+3.3%由數量增長支撐。'}</p>
+      <p><strong>${isJa?'高単価（4K+）が売上46%。':'高單價（4K+）占銷售額46%。'}</strong>${isJa?'4 SKUで26.7M。語彙智育4,667・英語Plus4,556・英語進階4,295・寶寶生活4,098。2-4K帯も45%・低単価9%のみ。':'4 SKU創造26.7M。語彙智育4,667・英語Plus 4,556・英語進階4,295・寶寶生活4,098。2-4K帶45%。'}</p>
+      <p><strong>${isJa?'84%が1回のみ購買。':'84%只購買1次。'}</strong>${isJa?'平均LTV5,186 NTD。TM接触・LINE綁定促進で2回目購買率向上が最大レバー。':'平均LTV 5,186 NTD。TM接觸・LINE綁定提升回購率是最大槓桿。'}</p>
+    </div></div>
+  </div>
+
+  <!-- 周邊商品 -->
+  <div id="s2b" class="sp" data-g="s2">
+    <div class="kpi-strip">
+      ${kpiCard(isJa?'FY25売上':'FY25銷售額','20.8M','+9.6% FY24比','pos')}
+      ${kpiCard(isJa?'舞台劇依存':'舞台劇依賴','42%','8.84M / 管道1位','neg')}
+      ${kpiCard(isJa?'平均単価（有償）':'平均單價（有償）','454 NTD',isJa?'FY24比+3.0%':'FY24比+3.0%','pos')}
+      ${kpiCard(isJa?'数量（有償）':'銷售數量（有償）','45,931',isJa?'個（+6.5%）':'個（+6.5%）','pos')}
+    </div>
+    <div class="cw"><div class="ct" data-k="c2_hb_ch"></div><div style="height:200px"><canvas id="cvs-hb-ch2" role="img" aria-label="周辺商品管道別売上"></canvas></div><div class="cn" data-k="c2_hb_ch_n" style="margin-top:4px"></div></div>
+    <div class="grid2">
+      <div class="cw"><div class="ct" data-k="c2m"></div><div style="height:180px"><canvas id="cvs-hb-m" role="img" aria-label="周辺商品月次"></canvas></div></div>
+      <div class="cw"><div class="ct" data-k="c2_hb_price"></div><div style="height:180px"><canvas id="cvs-hb-price" role="img" aria-label="周辺商品価格帯"></canvas></div><div class="cn" data-k="c2_hb_price_n" style="margin-top:4px"></div></div>
+    </div>
+    <div class="cw"><div class="ct" data-k="c2_gk_repeat"></div>${repeatCard(90,10,1269,false)}</div>
+    <div class="ins"><div class="ins-h" onclick="toggleIns(this)"><span>▶ ${t('insight')}</span><span style="font-size:10px;color:var(--text3)">${t('open_hint')}</span></div><div class="ins-b">
+      <p><strong>${isJa?'周辺商品42%は舞台劇管道。':'周邊商品42%靠舞台劇管道。'}</strong>${isJa?'WEB4.6M・授權3.2Mと上位3管道で79%。EC+KOL合計7%。舞台劇の場次・規模が収益上限を決める構造。':'前三大管道占79%。EC+KOL僅7%。舞台劇規模決定收益上限。'}</p>
+      <p><strong>${isJa?'玩具系3商品が高成長。':'玩具系3商品高速成長。'}</strong>${isJa?'活力車+118%・拖把+185%・廚房+129%が牽引。有償商品ベースで単価+3.0%（441→454 NTD）・数量+6.5%と両立。繪本は低単価・数量型。':'活力車+118%・拖把+185%・廚房+129%。有償商品基準單價+3.0%（441→454 NTD）・數量+6.5%同步成長。繪本為低單價數量型。'}</p>
+      <p><strong>${isJa?'90%が1回購買・LTV最低（1,269 NTD）。':'90%只購買1次・LTV最低（1,269 NTD）。'}</strong>${isJa?'「舞台劇来場時の非計画購買」が中心でリピート設計が難しい。TM単価756 NTD（WEB384の2倍）は提案力向上の余地。':'舞台劇現場衝動購買為主，難設計回購。TM單價756 vs WEB384 NTD（2倍）。'}</p>
+    </div></div>
+  </div>
+
+  <!-- Mirafeel -->
+  <div id="s2c" class="sp" data-g="s2">
+    <div class="kpi-strip">
+      ${kpiCard('FY25売上 / 銷售額','2.5M','+313% FY24比','pos')}
+      ${kpiCard(isJa?'整箱シェア':'整箱占比','86%',isJa?'売上の主体':'銷售主力','pos')}
+      ${kpiCard(isJa?'複数購買率':'回購率','25%',isJa?'学習16%・周辺10%超':'學習16%・周邊10%超','pos')}
+      ${kpiCard(isJa?'管道数':'管道數','3',isJa?'WEB・TM・KOL（ECゼロ）':'WEB・TM・KOL（EC為零）','neg')}
+    </div>
+    <div class="cw"><div class="ct" data-k="c2_mf_grp"></div>
+      <div style="height:200px"><canvas id="cvs-mf-grp" role="img" aria-label="Mirafeel SKU群組"></canvas></div>
+      <div class="cn" data-k="c2_mf_grp_n" style="margin-top:4px"></div>
+    </div>
+    <div class="grid2">
+      <div class="cw"><div class="ct" data-k="c2m"></div><div style="height:180px"><canvas id="cvs-mr-m" role="img" aria-label="Mirafeel月次"></canvas></div></div>
+      <div class="cw"><div class="ct" data-k="c2ch"></div><div style="height:180px"><canvas id="cvs-mr-ch" role="img" aria-label="Mirafeelチャネル"></canvas></div></div>
+    </div>
+    <div class="cw"><div class="ct" data-k="c2_mf_sku"></div>
+      <div class="tbl-wrap"><table style="font-size:11.5px"><thead><tr>
+        <th>${t('c2_col_prod')}</th><th class="r">${t('c2_col_rev')}</th><th class="r">${t('c2_col_cnt')}</th>
+        <th class="r">${t('c2_col_aov')}</th><th class="r">${t('c2_col_yoy')}</th>
+      </tr></thead><tbody>
+      ${bd.mf.skus.filter(r=>r.rev>0).map((r,i)=>{
+        const yoy=r.rev24>0?((r.rev/r.rev24-1)*100).toFixed(0)+'%':'NEW';
+        const isBox=r.n.includes('整箱');
+        return`<tr${isBox?' style="background:var(--green-bg)"':''}>
+          <td>Mirafeel ${r.n}</td>
+          <td class="r">${(r.rev/1e6).toFixed(3)}M</td>
+          <td class="r">${r.cnt.toLocaleString()}</td>
+          <td class="r" style="font-family:var(--mono)">${r.aov.toLocaleString()}</td>
+          <td class="r" style="color:${r.rev24===0?'var(--text3)':parseFloat(yoy)>=0?'var(--green)':'var(--red)'};font-weight:600">${yoy}</td>
+        </tr>`;
+      }).join('')}
+      </tbody></table></div>
+    </div>
+    <div class="cw"><div class="ct" data-k="c2_gk_repeat"></div>${repeatCard(75,25,3984,true)}</div>
+    <div class="ins"><div class="ins-h" onclick="toggleIns(this)"><span>▶ ${t('insight')}</span><span style="font-size:10px;color:var(--text3)">${t('open_hint')}</span></div><div class="ins-b">
+      <p><strong>${isJa?'+313%成長の実態：整箱へのシフトが加速。':'成長+313%的實態：整箱化趨勢加速。'}</strong>${isJa?'整箱4サイズ（L・XL・XXL・M）で売上の86%・2.16Mを占める。全サイズが+300〜+500%超の急成長。試用包は配布数が減少傾向（FY24比▲11〜72%）——試用から整箱購入への転換が機能している証拠。':'整箱4尺碼（L・XL・XXL・M）占銷售額86%・2.16M。所有尺碼均呈+300〜+500%以上的急速成長。試用包配發數持續縮小（FY24比▲11〜72%）——試用轉整箱購買機制正在奏效。'}</p>
+      <p><strong>${isJa?'複数購買率25%は3事業中最高。':'回購率25%為3事業最高。'}</strong>${isJa?'学習16%・周辺10%を上回る。消耗品の自然リピート。KOL単価1,769 NTD（整箱XL相当）が最高。':'超過學習16%・周邊10%。消耗品自然回購。KOL單價1,769 NTD最高。'}</p>
+    </div></div>
+  </div>
+
+  <!-- 比較系列 -->
+  <div id="s2d" class="sp" data-g="s2">
+    <div class="cw">
+      <div class="ct">${isJa?'商品群 × 管道　比較系列':'商品群 × 管道　比較系列'}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+        <select id="sel-biz" style="padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--bg2);font-family:var(--font)">
+          <option value="gk">${t('s2a')}</option>
+          <option value="hb">${t('s2b')}</option>
+          <option value="mr">Mirafeel</option>
+        </select>
+        <select id="sel-ch" style="padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--bg2);font-family:var(--font)">${buildChOpts('gk')}</select>
+        <button onclick="addCompSeries()" style="padding:5px 12px;background:#1a1916;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-family:var(--font)">+ ${isJa?'新増系列':'新增系列'}</button>
+        <button onclick="clearCompSeries()" style="padding:5px 10px;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;cursor:pointer;font-size:12px;color:var(--text2);font-family:var(--font)">${isJa?'全削除':'全刪除'}</button>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:10px">
+        <button id="ctype-line" class="comp-type on" onclick="setCompType('line')">${isJa?'折れ線':'折線'}</button>
+        <button id="ctype-bar" class="comp-type" onclick="setCompType('bar')">${isJa?'積み上げ棒':'堆疊棒'}</button>
+        <span style="font-size:11px;color:var(--text3);margin-left:6px;align-self:center">${isJa?'最大6系列':'最多6條'}</span>
+      </div>
+      <div id="comp-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;min-height:26px"></div>
+      <div id="comp-hint" style="font-size:11px;color:var(--text3);margin-bottom:8px">${isJa?'上のセレクターで商品群×管道を選び「新増系列」で追加。複数系列を重ねて比較できます。':'請選擇商品群×管道後點擊「新增系列」。可疊加多條系列進行比較。'}</div>
+      <div style="height:300px"><canvas id="cvs-comp" role="img" aria-label="比較系列圖表">比較系列圖表</canvas></div>
+      <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:8px">● ${isJa?'発売商品（学習商品）':'發售商品（學習商品）'}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${PRODS.map(p=>{const inFY25=D.months.includes(p.ym);return '<div style="padding:5px 10px;background:'+p.clr+';border-radius:8px;font-size:10.5px;color:#333;line-height:1.6">'+'<span style="color:var(--text3);font-size:9.5px">'+p.ym.slice(2,4)+'/'+p.ym.slice(4,6)+(inFY25?'':' ⬅発売中')+'</span><br>'+(isJa?p.nm:p.nm_zh)+'<br><span style="font-family:var(--mono);font-size:10px">NT$'+p.price.toLocaleString()+'</span></div>';}).join('')}
+        </div>
+      </div>
+    </div>
+  </div>`;
+  applyI18n();
+}
+
+function buildT3(){
+  const p=el('t3');
+  const yoy=D.stageYoY;
+  const totalRev=D.stage.reduce((a,r)=>a+r.rev,0);
+  const totalAtt=D.stage.reduce((a,r)=>a+r.att,0);
+  const totalSess=D.stage.reduce((a,r)=>a+r.sess,0);
+  const avgPrice=(totalRev/totalAtt).toFixed(0);
+  const perpax=Math.round(totalAtt/totalSess);
+  const colNames=LANG==='ja'?['劇名','種別','場次','人次','票房 NTD','平均票価 NTD','企業包場']:['劇名','類型','場次','人次','票房 NTD','平均票價 NTD','企業包場'];
+
+  let tblH=`<table><thead><tr>${colNames.map((c,i)=>`<th${i>1?' class="r"':''}>${c}</th>`).join('')}</tr></thead><tbody>`;
+  D.stage.forEach(r=>{
+    const pc=r.rev>5e6?'pos':'neutral';
+    tblH+=`<tr${r.avg<200?' class="tr-neg"':''}><td><strong>${r.name}</strong></td><td>${r.type}</td><td class="r">${r.sess}</td><td class="r">${r.att.toLocaleString()}</td><td class="r ${pc}">${r.rev.toLocaleString()}</td><td class="r">${r.avg.toLocaleString()}</td><td class="r">${r.biz?'✓':'—'}</td></tr>`;
+  });
+  tblH+=`<tr class="tr-total"><td>${LANG==='ja'?'合計':'合計'}</td><td></td><td class="r">${totalSess}</td><td class="r">${totalAtt.toLocaleString()}</td><td class="r">${totalRev.toLocaleString()}</td><td class="r">${avgPrice}</td><td></td></tr></tbody></table>`;
+
+  const vnHds=LANG==='ja'?['場地','場次','人次','票房（NTD）','備考']:['場地','場次','人次','票房（NTD）','備註'];
+  let vnTbl=`<div class="tbl-wrap"><table><thead><tr>${vnHds.map((c,i)=>`<th${i>1?' class="r"':''}>${c}</th>`).join('')}</tr></thead><tbody>`;
+  D.stageVenue.forEach(v=>{
+    const bizBadge=v.biz?`<span style="background:#FFF4A3;border-radius:3px;padding:1px 5px;font-size:9.5px">${LANG==='ja'?'企業包場':'企業包場'}</span>`:'';
+    vnTbl+=`<tr><td style="font-size:11.5px">${v.name}</td><td class="r">${v.sess}</td><td class="r">${v.att.toLocaleString()}</td><td class="r pos">${(v.rev/1e6).toFixed(2)}M</td><td>${bizBadge}</td></tr>`;
+  });
+  vnTbl+=`</tbody></table></div>`;
+
+  const sc=D.stageCost;
+  const margin=((sc.rev-sc.total)/sc.rev*100).toFixed(1);
+  let costTbl=`<div class="tbl-wrap"><table><thead><tr><th>${LANG==='ja'?'費用科目':'費用科目'}</th><th class="r">${LANG==='ja'?'金額（NTD）':'金額（NTD）'}</th><th class="r">${LANG==='ja'?'費用比':'費用占比'}</th><th>${LANG==='ja'?'備考':'備註'}</th></tr></thead><tbody>`;
+  sc.items.forEach(r=>{
+    const ratio=(r.v/sc.total*100).toFixed(1)+'%';
+    const note=r.note?r.note.split('|').find(s=>s.startsWith(LANG==='ja'?'ja:':'zh:'))?.slice(3)||'':'';
+    const isProd=r.cat.includes('編輯委託');
+    costTbl+=`<tr${isProd?' style="background:var(--amber-bg)"':''}><td style="font-size:11.5px">${r.cat}</td><td class="r">${fmtNTD(r.v)}</td><td class="r" style="font-family:var(--mono)">${ratio}</td><td style="font-size:10.5px;color:var(--text3)">${note}</td></tr>`;
+  });
+  costTbl+=`<tr class="tr-total"><td>${LANG==='ja'?'総費用':'總費用'}</td><td class="r">${fmtNTD(sc.total)}</td><td class="r">100%</td><td></td></tr>`;
+  costTbl+=`<tr style="background:var(--green-bg)"><td style="font-weight:600;color:var(--green)">${LANG==='ja'?'事業利益':'事業利潤'}</td><td class="r pos" style="font-weight:600">+${fmtNTD(sc.rev-sc.total)}</td><td class="r pos" style="font-weight:600">${margin}%</td><td></td></tr>`;
+  costTbl+=`</tbody></table></div>`;
+  costTbl+=`<div class="cn" data-k="c3_cost_n" style="margin-top:6px;padding:6px 10px;background:var(--amber-bg);border-radius:4px;color:var(--amber)"></div>`;
+
+  p.innerHTML=`
+  <div class="kpi-strip">
+    ${kpiCard(t('c3kpi_shows'),'6',LANG==='ja'?'タイトル':'劇目')}
+    ${kpiCard(t('c3kpi_sess'),'85',LANG==='ja'?'場次':'場次')}
+    ${kpiCard(t('c3kpi_att'),'61,047',LANG==='ja'?'人次（FY24比▲20%）':'人次（FY24比▲20%）','neg')}
+    ${kpiCard(t('c3kpi_rev'),'62.6M',t('kpi_unit'),'pos')}
+    ${kpiCard(t('c3kpi_avg'),'1,012',LANG==='ja'?'NTD/人（FY24比+8.7%）':'NTD/人（FY24比+8.7%）','pos')}
+    ${kpiCard(t('c3kpi_perpax'),perpax+'人',LANG==='ja'?'/場次（FY24比▲160人）':'/場次（FY24比▲160人）','neg')}
+    ${kpiCard(t('c3kpi_biz'),'8',LANG==='ja'?'場次（FY24比▲13）':'場次（FY24比▲13）','neg')}
+  </div>
+
+  <div class="grid2">
+    <div class="cw"><div class="ct" data-k="c3_yoy"></div><div style="height:240px"><canvas id="cvs-st-yoy" role="img" aria-label="FY24 vs FY25: 人次76333→61047 票房71M→62M 平均票価931→1012"></canvas></div></div>
+    <div class="cw"><div class="ct" data-k="c3_biz"></div><div style="height:240px"><canvas id="cvs-st-biz" role="img" aria-label="企業包場vs一般公演: FY24包場36% FY25包場12%"></canvas></div><div class="cn" data-k="c3_biz_n" style="margin-top:6px"></div></div>
+  </div>
+
+  <div class="cw"><div class="ct" data-k="c3rev"></div><div style="height:220px"><canvas id="cvs-st-rev" role="img" aria-label="Stage Revenue by Show"></canvas></div></div>
+  <div class="grid2">
+    <div class="cw"><div class="ct" data-k="c3att"></div><div style="height:200px"><canvas id="cvs-st-att" role="img" aria-label="Stage Attendance"></canvas></div></div>
+    <div class="cw"><div class="ct" data-k="c3price"></div><div style="height:200px"><canvas id="cvs-st-price" role="img" aria-label="Stage Avg Price"></canvas></div></div>
+  </div>
+  <div class="cw"><div class="ct" data-k="c3det"></div><div class="tbl-wrap">${tblH}</div><div class="cn" data-k="c3n"></div></div>
+
+  <div class="ins" style="margin-bottom:8px">
+    <div class="ins-h" onclick="toggleIns(this)" style="background:var(--bg3)">
+      <span>▶ <span data-k="c3_venue"></span></span>
+      <span style="font-size:10px;color:var(--text3)" data-k="open_hint"></span>
+    </div>
+    <div class="ins-b" style="padding:10px">${vnTbl}<div class="cn" data-k="c3_venue_n" style="margin-top:6px"></div></div>
+  </div>
+
+  <div class="ins" style="margin-bottom:8px">
+    <div class="ins-h" onclick="toggleIns(this)" style="background:var(--bg3)">
+      <span>▶ <span data-k="c3_cost"></span></span>
+      <span style="font-size:10px;color:var(--text3)" data-k="open_hint"></span>
+    </div>
+    <div class="ins-b" style="padding:10px">${costTbl}</div>
+  </div>
+
+  <div class="ins"><div class="ins-h" onclick="toggleIns(this)"><span>▶ ${t('insight')}</span><span style="font-size:10px;color:var(--text3)">${t('open_hint')}</span></div><div class="ins-b">${t('ins3')}</div></div>`;
+  applyI18n();
+}
+
+function buildT4(){
+  const p=el('t4');
+  const mdTotal=D.licCat.md.reduce((a,v)=>a+v,0);
+  const anTotal=D.licCat.an.reduce((a,v)=>a+v,0);
+  const ld=D.licDetail;
+  const fy25Active=ld.filter(v=>v.fy25>0);
+  const selfTotal=ld.filter(v=>v.div==='自社').reduce((a,v)=>a+v.fy25,0);
+  const agentTotal=ld.filter(v=>v.div==='好園地').reduce((a,v)=>a+v.fy25,0);
+  const newV=ld.filter(v=>v.fy24===0&&v.fy25>0).length;
+  const exitV=ld.filter(v=>v.fy24>0&&v.fy25===0).length;
+
+  const mLbl=['4月','5月','6月','7月','8月','9月','10月','11月','12月','1月','2月'];
+  const mLbl_zh=['4月','5月','6月','7月','8月','9月','10月','11月','12月','1月','2月'];
+  const top12=ld.filter(v=>v.fy25>0).slice(0,12);
+  const maxV=Math.max(...top12.flatMap(v=>v.fy25m));
+  function hClr(v){
+    if(!v)return'';
+    const i=Math.min(v/maxV,1);
+    const a=(0.1+i*0.75).toFixed(2);
+    return`background:rgba(197,180,227,${a})`;
+  }
+  const lbls=LANG==='ja'?mLbl:mLbl_zh;
+  let heatHtml=`<div class="tbl-wrap"><table style="font-size:11px"><thead><tr>
+    <th>${LANG==='ja'?'廠商':'廠商'}</th>
+    <th>${LANG==='ja'?'区分':'區分'}</th>
+    ${lbls.map(m=>`<th class="r" style="font-size:10px">${m}</th>`).join('')}
+    <th class="r">${LANG==='ja'?'合計':'合計'}</th>
+  </tr></thead><tbody>`;
+  top12.forEach(v=>{
+    const divLbl=v.div==='自社'?(LANG==='ja'?'自社':'自社'):(LANG==='ja'?'好園地':'好園地');
+    const divClr=v.div==='自社'?'#A8C5DA':'#C5B4E3';
+    heatHtml+=`<tr>
+      <td style="white-space:nowrap;font-size:11px">${v.n}</td>
+      <td><span style="background:${divClr};border-radius:3px;padding:1px 5px;font-size:9.5px">${divLbl}</span></td>
+      ${v.fy25m.map(m=>`<td class="r" style="${hClr(m)};font-family:var(--mono);font-size:10px">${m?Math.round(m/1000)+'K':''}</td>`).join('')}
+      <td class="r" style="font-family:var(--mono);font-weight:600">${fmtNTD(v.fy25)}</td>
+    </tr>`;
+  });
+  heatHtml+=`</tbody></table></div>`;
+  heatHtml+=`<div class="cn" data-k="c4_heat_n"></div>`;
+
+  const yoyRows=ld.filter(v=>v.fy24>0||v.fy25>0).sort((a,b)=>b.fy25-a.fy25);
+  let yoyHtml=`<div class="tbl-wrap"><table style="font-size:11.5px"><thead><tr>
+    <th>${LANG==='ja'?'廠商':'廠商'}</th>
+    <th class="r">FY24</th><th class="r">FY25</th>
+    <th class="r">${LANG==='ja'?'増減':'增減'}</th>
+    <th class="r">${LANG==='ja'?'前年比':'同期比'}</th>
+    <th>${LANG==='ja'?'支払パターン':'付款模式'}</th>
+  </tr></thead><tbody>`;
+  yoyRows.forEach(v=>{
+    const diff=v.fy25-v.fy24;
+    const yoy=v.fy24>0?(v.fy25/v.fy24*100).toFixed(0)+'%':(LANG==='ja'?'新規':'新規');
+    const diffStr=diff>0?`<span class="pos">+${fmtNTD(diff)}</span>`:`<span class="neg">▲${fmtNTD(Math.abs(diff))}</span>`;
+    const patMap={regular:t('c4_pat_reg'),spot:t('c4_pat_spt'),oneshot:t('c4_pat_one')};
+    const patClr={regular:'#B5EAD7',spot:'#FFF4A3',oneshot:'#F5A8A0'};
+    yoyHtml+=`<tr>
+      <td>${v.n}</td>
+      <td class="r">${v.fy24?fmtNTD(v.fy24):'—'}</td>
+      <td class="r">${v.fy25?fmtNTD(v.fy25):'—'}</td>
+      <td class="r">${v.fy25||v.fy24?diffStr:'—'}</td>
+      <td class="r">${yoy}</td>
+      <td><span style="background:${patClr[v.pat]};border-radius:3px;padding:1px 5px;font-size:9.5px">${patMap[v.pat]}</span></td>
+    </tr>`;
+  });
+  yoyHtml+=`</tbody></table></div>`;
+
+  p.innerHTML=`
+  <div class="kpi-strip">
+    ${kpiCard(LANG==='ja'?'授權金総収入（11ヶ月）':'授權金總收入（11個月）','23.3M',t('kpi_unit'))}
+    ${kpiCard(t('c4md'),M(mdTotal)+'M','89%','pos')}
+    ${kpiCard(t('c4an'),M(anTotal)+'M','11%','neutral')}
+    ${kpiCard(LANG==='ja'?'廠商数（取引あり）':'廠商數（有交易）','20',LANG==='ja'?'社':'家')}
+    ${kpiCard(LANG==='ja'?'新規廠商（FY25）':'新規廠商（FY25）',newV+'社',LANG==='ja'?'FY24にない廠商':'FY24無此廠商','pos')}
+  </div>
+
+  <div class="grid2">
+    <div class="cw"><div class="ct" data-k="c4ven"></div><div style="height:280px"><canvas id="cvs-lic-v" role="img" aria-label="License Vendor Top8"></canvas></div></div>
+    <div class="cw">
+      <div class="ct" data-k="c4_div"></div>
+      <div style="height:140px"><canvas id="cvs-lic-div" role="img" aria-label="自社vs好園地"></canvas></div>
+      <div class="cn" data-k="c4_div_n" style="margin-top:6px"></div>
+      <div style="margin-top:10px"><div class="ct" data-k="c4_pat"></div>
+      <div style="height:110px"><canvas id="cvs-lic-pat" role="img" aria-label="付款模式別"></canvas></div></div>
+    </div>
+  </div>
+  <div class="cw"><div class="ct" data-k="c4mon"></div><div style="height:230px"><canvas id="cvs-lic-m" role="img" aria-label="License Monthly"></canvas></div><div class="cn" data-k="c4n"></div></div>
+
+  <div class="ins" style="margin-bottom:8px">
+    <div class="ins-h" onclick="toggleIns(this)" style="background:var(--bg3)">
+      <span>▶ <span data-k="c4_yoy"></span></span>
+      <span style="font-size:10px;color:var(--text3)" data-k="open_hint"></span>
+    </div>
+    <div class="ins-b" style="padding:10px">${yoyHtml}</div>
+  </div>
+
+  <div class="ins" style="margin-bottom:8px">
+    <div class="ins-h" onclick="toggleIns(this)" style="background:var(--bg3)">
+      <span>▶ <span data-k="c4_heat"></span></span>
+      <span style="font-size:10px;color:var(--text3)" data-k="open_hint"></span>
+    </div>
+    <div class="ins-b" style="padding:10px">${heatHtml}</div>
+  </div>
+
+  <div class="ins"><div class="ins-h" onclick="toggleIns(this)"><span>▶ ${t('insight')}</span><span style="font-size:10px;color:var(--text3)">${t('open_hint')}</span></div><div class="ins-b">${t('ins4')}</div></div>`;
+  applyI18n();
+}
+
+function buildDrillSection(id, titleKey, open){
+  return `<div class="ins" style="margin-bottom:8px">
+    <div class="ins-h" onclick="toggleIns(this)" style="background:var(--bg3)">
+      <span>▶ <span data-k="${titleKey}"></span></span>
+      <span style="font-size:10px;color:var(--text3)" data-k="open_hint"></span>
+    </div>
+    <div class="ins-b" id="${id}" style="padding:10px;display:${open?'block':'none'}"></div>
+  </div>`;
+}
+
+function vendorTable(rows, reducible){
+  const isJa=LANG==='ja';
+  const hd=isJa?['廠商名稱','金額（NTD）','備考']:['廠商名稱','金額（NTD）','備註'];
+  let h=`<div class="tbl-wrap"><table><thead><tr>${hd.map((c,i)=>`<th${i===1?' class="r"':''}>${c}</th>`).join('')}</tr></thead><tbody>`;
+  rows.forEach(r=>{
+    const note=r.note?r.note.split('|').find(s=>s.startsWith(isJa?'ja:':'zh:'))?.slice(3)||'':'';
+    h+=`<tr><td style="font-size:11.5px">${r.n}</td><td class="r">${fmtNTD(r.v)}</td><td style="font-size:10.5px;color:var(--text3)">${note}</td></tr>`;
+  });
+  const total=rows.reduce((a,r)=>a+r.v,0);
+  h+=`<tr class="tr-total"><td>${isJa?'合計':'合計'}</td><td class="r">${fmtNTD(total)}</td><td></td></tr>`;
+  h+=`</tbody></table></div>`;
+  if(reducible){
+    h+=`<div style="margin-top:6px;padding:6px 10px;background:var(--amber-bg);border-radius:4px;font-size:11px;color:var(--amber)">${t('c5_reducible')}</div>`;
+  }
+  return h;
+}
+
+function deptTable(rows){
+  const isJa=LANG==='ja';
+  const hd=isJa?['部門','科目','金額（NTD）']:['部門','科目','金額（NTD）'];
+  let h=`<div class="tbl-wrap"><table><thead><tr>${hd.map((c,i)=>`<th${i===2?' class="r"':''}>${c}</th>`).join('')}</tr></thead><tbody>`;
+  rows.forEach(r=>{
+    const cat=r.cat.split('|').find(s=>s.startsWith(isJa?'ja:':'zh:'))?.slice(3)||r.cat;
+    h+=`<tr><td style="font-size:11.5px">${r.dept}</td><td style="font-size:11.5px">${cat}</td><td class="r">${fmtNTD(r.v)}</td></tr>`;
+  });
+  h+=`</tbody></table></div>`;
+  return h;
+}
+
+function populateDrillSections(){
+  const d=D.kyoDrill;
+  const ito=el('t5d-ito'); if(ito) ito.innerHTML=vendorTable(d.ito,true);
+  const rent=el('t5d-rent'); if(rent) rent.innerHTML=vendorTable(d.rent,true);
+  const ad=el('t5d-ad'); if(ad) ad.innerHTML=vendorTable(d.ad,false);
+  const misc=el('t5d-misc'); if(misc) misc.innerHTML=vendorTable(d.misc,false);
+  const dept=el('t5d-dept'); if(dept) dept.innerHTML=deptTable(d.dept);
+}
+
+function buildT5(){
+  const k=D.kyotsu;
+  const p=el('t5');
+  const names=D.plNames[LANG];
+  const cm=D.costMatrix;
+  const colHds=LANG==='ja'
+    ?['事業','原価','営業費用','一般管理費','人件費','費用合計']
+    :['事業','原價','營業費用','一般管理費','人件費','費用合計'];
+  const allVals=[...cm.cost,...cm.opex,...cm.gm,...cm.hc].filter(v=>v>0);
+  const maxVal=Math.max(...allVals);
+  function heatClr(v){
+    if(!v||v<=0)return'var(--bg)';
+    const intensity=Math.min(v/maxVal,1);
+    const alpha=(0.08+intensity*0.55).toFixed(2);
+    return`rgba(180,100,80,${alpha})`;
+  }
+  function heatTxt(v){
+    if(!v||v<=0)return'<span style="color:var(--text3)">—</span>';
+    const intensity=Math.min(v/maxVal,1);
+    const clr=intensity>0.4?'#5c1a10':'#8b3a2a';
+    return`<span style="font-family:var(--mono);color:${clr}">${fmtNTD(v)}</span>`;
+  }
+  let tbl=`<table><thead><tr>${colHds.map((c,i)=>`<th${i>0?' class="r"':''}>${c}</th>`).join('')}</tr></thead><tbody>`;
+  cm.bizIds.forEach((id,i)=>{
+    const cost=cm.cost[i];const opex=cm.opex[i];const gm=cm.gm[i];const hc=cm.hc[i];
+    const total=Math.abs(cost)+Math.abs(opex)+Math.abs(gm)+Math.abs(hc);
+    const isKy=id==='ky';
+    const rowStyle=isKy?' style="background:var(--red-bg);font-weight:600"':'';
+    tbl+=`<tr${rowStyle}>
+      <td>${names[D.pl.findIndex(r=>r.id===id)]}</td>
+      <td class="r" style="background:${heatClr(cost)}">${heatTxt(cost)}</td>
+      <td class="r" style="background:${heatClr(opex)}">${heatTxt(opex)}</td>
+      <td class="r" style="background:${heatClr(gm)}">${heatTxt(gm)}</td>
+      <td class="r" style="background:${heatClr(hc)}">${heatTxt(hc)}</td>
+      <td class="r" style="font-family:var(--mono);font-weight:600">${fmtNTD(-total)}</td>
+    </tr>`;
+  });
+  tbl+=`</tbody></table>`;
+
+  p.innerHTML=`
+  <div class="kpi-strip">
+    ${kpiCard(t('kpi_hc'),'▲28.0M',t('kpi_unit'),'neg')}
+    ${kpiCard(t('kpi_gm'),'▲46.6M',t('kpi_unit'),'neg')}
+    ${kpiCard(t('kpi_opex'),'▲24.6M',t('kpi_unit'),'neg')}
+    ${kpiCard(t('kpi_credit'),'+7.6M',t('kpi_unit'),'pos')}
+    ${kpiCard(LANG==='ja'?'共通費合計':'共通費合計','▲91.6M',t('kpi_unit'),'neg')}
+  </div>
+
+  <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;padding:4px 0;border-bottom:2px solid var(--border2)">${LANG==='ja'?'① 共通費の解剖':'① 共通費解剖'}</div>
+  <div class="cw"><div class="ct" data-k="c5_kyotsu"></div><div style="height:260px"><canvas id="cvs-cost-wf" role="img" aria-label="共通費ウォーターフォール">人件費28M 一般管理費46.6M 営業費用24.6M 成本戻り+7.6M 合計▲91.6M</canvas></div><div class="cn" data-k="c5note"></div></div>
+  <div class="cw"><div class="ct" data-k="c5_drill"></div>
+    <div class="grid2">
+      <div>
+        <div style="font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:500" data-k="c5_drill_hc"></div>
+        <div style="height:180px"><canvas id="cvs-drill-hc" role="img" aria-label="人件費科目別"></canvas></div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:500" data-k="c5_drill_gm"></div>
+        <div style="height:180px"><canvas id="cvs-drill-gm" role="img" aria-label="一般管理費科目別"></canvas></div>
+      </div>
+    </div>
+    <div style="margin-top:10px">
+      <div style="font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:500" data-k="c5_drill_opex"></div>
+      <div style="height:160px"><canvas id="cvs-drill-opex" role="img" aria-label="営業費用科目別"></canvas></div>
+    </div>
+    <div class="cn" data-k="c5note2"></div>
+  </div>
+
+  <div style="font-size:12px;font-weight:600;color:var(--text2);margin:14px 0 8px;padding:4px 0;border-bottom:2px solid var(--border2)" data-k="c5_detail_title"></div>
+  <div id="t5-drill-wrap">
+    ${buildDrillSection('t5d-ito','c5_ito_title',true)}
+    ${buildDrillSection('t5d-rent','c5_rent_title',true)}
+    ${buildDrillSection('t5d-ad','c5_ad_title',false)}
+    ${buildDrillSection('t5d-misc','c5_misc_title',false)}
+    ${buildDrillSection('t5d-dept','c5_dept_title',false)}
+  </div>
+
+  <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;padding:4px 0;border-bottom:2px solid var(--border2)">${LANG==='ja'?'② 事業別費用マトリクス':'② 事業別費用矩陣'}</div>
+  <div class="cw"><div class="ct" data-k="c5_biz"></div><div class="tbl-wrap">${tbl}</div><div class="cn" data-k="c5_matrix_note"></div></div>
+
+  <div class="ins"><div class="ins-h" onclick="toggleIns(this)"><span>▶ ${t('insight')}</span><span style="font-size:10px;color:var(--text3)">${t('open_hint')}</span></div><div class="ins-b">${t('ins5')}</div></div>`;
+  applyI18n();
+  populateDrillSections();
+}
+
+function buildT6(){
+  const p=el('t6');
+  const b=D.bcl;
+  const l=D.ltv;
+  const bindRatio=(l.bound.yes.tx/(l.bound.no.tx)).toFixed(2);
+  const ss_current=b.age.ss;
+  const ss_target=Math.round(b.valid*0.15);
+  const ss_add=ss_target-ss_current;
+  const ltv_add=Math.round(l.customers*(6000-l.avgLtv));
+  const isJa=LANG==='ja';
+
+  const rankColors={'A孕期':'#F5D4A0','S/SS':'#A8C5DA','S':'#B5EAD7','AA':'#B5EAD7','A':'#FFF4A3','B':'#D4C5B0'};
+  const yrCards=b.byYear.map(y=>{
+    const pct=(y.bcl/b.valid*100).toFixed(2)+'%';
+    const bg=rankColors[y.rank]||'#e2dfd8';
+    return `<div style="background:${bg};border-radius:8px;padding:10px 12px;min-width:120px;flex:1">
+      <div style="font-size:10px;color:var(--text2);margin-bottom:2px">${y.yr}${isJa?'年生':'年生'} <span style="background:#fff;border-radius:10px;padding:1px 5px;font-size:9.5px;font-weight:600">${y.rank}</span></div>
+      <div style="font-size:18px;font-weight:300;font-family:var(--mono)">${(y.bcl/1000).toFixed(1)}K</div>
+      <div style="font-size:10px;color:var(--text3)">${pct}</div>
+    </div>`;
+  }).join('');
+
+  const s7=b.seg7;
+  const seg7vals=[s7.preg,s7.s06,s7.ss712,s7.s1324,s7.aa2536,s7.a3760,s7.b61p];
+  const seg7labels=t('seg7_labels');
+  const seg7colors=['#F5D4A0','#A8C5DA','#A8C5DA','#B5EAD7','#B5EAD7','#FFF4A3','#D4C5B0'];
+  const seg7total=seg7vals.reduce((a,v)=>a+v,0);
+  let seg7tbl=`<table style="font-size:12px"><thead><tr><th>${isJa?'ランク':'等級'}</th><th>${isJa?'月齢':'月齡'}</th><th class="r">${isJa?'件数':'件數'}</th><th class="r">${isJa?'構成比':'構成比'}</th></tr></thead><tbody>`;
+  seg7vals.forEach((v,i)=>{
+    const pct=(v/seg7total*100).toFixed(1)+'%';
+    const clr=i>=5?'var(--amber)':i>=3?'var(--text1)':'var(--green)';
+    seg7tbl+=`<tr><td><span style="background:${seg7colors[i]};border-radius:3px;padding:1px 6px;font-size:10px">${seg7labels[i].split(' ')[0]}</span></td><td style="font-size:11px">${seg7labels[i]}</td><td class="r" style="font-family:var(--mono)">${v.toLocaleString()}</td><td class="r" style="color:${clr};font-weight:600">${pct}</td></tr>`;
+  });
+  seg7tbl+=`<tr class="tr-total"><td colspan="2">${isJa?'合計':'合計'}</td><td class="r">${seg7total.toLocaleString()}</td><td class="r">100.0%</td></tr></tbody></table>`;
+
+  const mc=b.mCross;
+  const mLbl=b.mLbl24;
+  const segKeys=['preg','s06','ss712','s1324','aa2536','a3760','b61p'];
+  const segShort=['孕期','S 0-6','SS7-12','S13-24','AA25-36','A37-60','B61+'];
+  let crossTbl=`<div class="tbl-wrap"><table style="font-size:11px"><thead><tr><th>${isJa?'年月':'年月'}</th>${segShort.map(s=>`<th class="r" style="font-size:9.5px">${s}</th>`).join('')}<th class="r">${isJa?'合計':'合計'}</th></tr></thead><tbody>`;
+  mLbl.forEach((m,mi)=>{
+    const vals=segKeys.map(k=>mc[k][mi]);
+    const tot=vals.reduce((a,v)=>a+v,0);
+    crossTbl+=`<tr><td style="font-family:var(--mono);font-size:10.5px">${m}</td>${vals.map(v=>`<td class="r">${v||''}</td>`).join('')}<td class="r" style="font-weight:600">${tot}</td></tr>`;
+  });
+  crossTbl+=`</tbody></table></div>`;
+
+  const ltvBins=['〜1K','1-2K','2-3K','3-5K','5-8K','8-15K','15K+'];
+  const ltvCnts=[1005,1492,2902,3086,2128,1640,388];
+  const ltvAmts=[0.54,2.48,6.86,12.47,13.68,17.59,8.07];
+  const ltvTotal=ltvCnts.reduce((a,v)=>a+v,0);
+  const ltvAmtTotal=ltvAmts.reduce((a,v)=>a+v,0);
+  let ltvTbl=`<table style="font-size:12px"><thead><tr><th>${isJa?'LTV帯':'LTV帶'}</th><th class="r">${isJa?'顧客数':'客戶數'}</th><th class="r">${isJa?'構成%':'構成%'}</th><th class="r">${isJa?'売上(M)':'銷售(M)'}</th></tr></thead><tbody>`;
+  ltvBins.forEach((bin,i)=>{
+    const pct=(ltvCnts[i]/ltvTotal*100).toFixed(1)+'%';
+    const isHigh=i>=4;
+    ltvTbl+=`<tr${isHigh?' style="background:var(--green-bg)"':''}><td>${bin} NTD</td><td class="r">${ltvCnts[i].toLocaleString()}</td><td class="r">${pct}</td><td class="r ${isHigh?'pos':''}">${ltvAmts[i].toFixed(2)}M</td></tr>`;
+  });
+  ltvTbl+=`<tr class="tr-total"><td>${isJa?'合計':'合計'}</td><td class="r">${ltvTotal.toLocaleString()}</td><td class="r">100%</td><td class="r">${ltvAmtTotal.toFixed(2)}M</td></tr></tbody></table>`;
+
+  const chStats=[
+    {ch:'TM',cnt:3671,ltv:5852,bind:98,repeat:23},
+    {ch:'KOL',cnt:2643,ltv:6038,bind:47,repeat:16},
+    {ch:'WEB',cnt:6327,ltv:3831,bind:52,repeat:18}
+  ];
+  const chHds=isJa?['管道','顧客数','平均LTV','綁定率','リピート率']:['管道','客戶數','平均LTV','綁定率','回購率'];
+  let chTbl=`<table style="font-size:12px"><thead><tr>${chHds.map((h,i)=>`<th${i>0?' class="r"':''}>${h}</th>`).join('')}</tr></thead><tbody>`;
+  chStats.forEach(r=>{
+    chTbl+=`<tr><td style="font-weight:600">${r.ch}</td><td class="r">${r.cnt.toLocaleString()}</td><td class="r pos">${r.ltv.toLocaleString()} NTD</td><td class="r">${r.bind}%</td><td class="r">${r.repeat}%</td></tr>`;
+  });
+  chTbl+=`</tbody></table>`;
+
+  p.innerHTML=`
+  <div class="sbar" style="margin-bottom:12px">
+    <button class="sb on" data-g="t6s" data-sid="t6-db" onclick="showSub('t6s','t6-db')" data-k="c6tab_db"></button>
+    <button class="sb" data-g="t6s" data-sid="t6-acq" onclick="showSub('t6s','t6-acq')" data-k="c6tab_acq"></button>
+  </div>
+
+  <!-- サブタブA: DB現況 -->
+  <div id="t6-db" class="sp on" data-g="t6s">
+    <div class="kpi-strip">
+      ${kpiCard(t('bcl_total'),(b.total/1000).toFixed(1)+'K','')}
+      ${kpiCard(t('bcl_valid'),(b.valid/1000).toFixed(1)+'K','70%','pos')}
+      ${kpiCard(t('bcl_invalid'),(b.invalid/1000).toFixed(1)+'K','30%','neg')}
+      ${kpiCard(t('bcl_newest'),'4,263','2026/03','pos')}
+      ${kpiCard(t('bcl_young'),'28,220','19%','neutral')}
+    </div>
+    <div class="cw"><div class="ct" data-k="c6_yr_cards"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">${yrCards}</div>
+    </div>
+    <div class="grid2">
+      <div class="cw"><div class="ct" data-k="c6_seg7"></div>
+        <div class="cn" data-k="c6_seg7_n" style="margin-bottom:6px"></div>
+        <div style="height:200px"><canvas id="cvs-bcl-age7" role="img" aria-label="BCL月齢7分布"></canvas></div>
+      </div>
+      <div class="cw"><div class="ct" data-k="c6_seg7_tbl"></div>
+        <div class="tbl-wrap">${seg7tbl}</div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="cw"><div class="ct" data-k="c6freq"></div><div style="height:210px"><canvas id="cvs-ltv-freq" role="img" aria-label="Purchase Frequency"></canvas></div></div>
+      <div class="cw"><div class="ct" data-k="c6bind"></div><div style="height:210px"><canvas id="cvs-ltv-bind" role="img" aria-label="LINE Binding Impact"></canvas></div></div>
+    </div>
+    <div class="cw"><div class="ct" data-k="c6_ltv_dist"></div>
+      <div class="tbl-wrap">${ltvTbl}</div>
+      <div class="cn" data-k="c6_ltv_dist_n" style="margin-top:6px"></div>
+    </div>
+    <div class="cw"><div class="ct" data-k="c6_ch_stats"></div>
+      <div class="tbl-wrap">${chTbl}</div>
+    </div>
+    <div class="cw" style="border-color:#7EC8A0;background:#f7fcf9">
+      <div class="ct" style="color:var(--green)" data-k="c6scen"></div>
+      <div class="scen">
+        <div class="scen-row"><span class="scen-num">+${ss_add.toLocaleString()}</span><span class="scen-lbl">${t('scen1_lbl')}</span></div>
+        <div class="scen-row"><span class="scen-num">+${(ltv_add/1e6).toFixed(1)}M NTD</span><span class="scen-lbl">${t('scen2_lbl')}</span></div>
+        <div class="scen-row"><span class="scen-num">${bindRatio}x</span><span class="scen-lbl">${t('scen3_lbl')} ${bindRatio}倍</span></div>
+      </div>
+    </div>
+    <div class="ins"><div class="ins-h" onclick="toggleIns(this)"><span>▶ ${t('insight')}</span><span style="font-size:10px;color:var(--text3)">${t('open_hint')}</span></div><div class="ins-b">${t('ins6')}</div></div>
+  </div>
+
+  <!-- サブタブB: 獲得分析 -->
+  <div id="t6-acq" class="sp" data-g="t6s">
+    <div class="kpi-strip">
+      ${kpiCard(isJa?'FY25 新規有効BCL合計':'FY25 新規有效BCL合計','30,206',isJa?'人（24/04〜25/03）':'人（24/04〜25/03）')}
+      ${kpiCard(isJa?'FY25 封鎖率（全体）':'FY25 封鎖率（全體）','32.3%',isJa?'全管道ベース':'全管道基準','neg')}
+      ${kpiCard(isJa?'最低封鎖率管道':'最低封鎖率管道','SHOPLINE','6.4%','pos')}
+    </div>
+    <div class="cw"><div class="ct" data-k="c6_new_monthly"></div>
+      <div style="height:260px"><canvas id="cvs-bcl-new" role="img" aria-label="月次新規BCL登録数"></canvas></div>
+      <div class="cn" data-k="c6_new_monthly_n"></div>
+    </div>
+    <div class="cw"><div class="ct" data-k="c6_cross"></div>
+      <div style="height:280px"><canvas id="cvs-bcl-cross" role="img" aria-label="月份×月齡交叉"></canvas></div>
+      <div class="cn" data-k="c6_cross_n"></div>
+    </div>
+    <div class="ins" style="margin-bottom:8px">
+      <div class="ins-h" onclick="toggleIns(this)" style="background:var(--bg3)">
+        <span>▶ <span data-k="c6_cross_tbl"></span></span>
+        <span style="font-size:10px;color:var(--text3)" data-k="open_hint"></span>
+      </div>
+      <div class="ins-b" style="padding:10px">${crossTbl}</div>
+    </div>
+    <div class="cw"><div class="ct" data-k="c6_block"></div>
+      <div style="height:260px"><canvas id="cvs-bcl-block" role="img" aria-label="管道別封鎖率"></canvas></div>
+      <div class="cn" data-k="c6_block_n"></div>
+    </div>
+  </div>`;
+  applyI18n();
+}
+
+function buildAllContent(){
+  buildTabs();buildT1();buildT2();buildT3();buildT4();buildT5();buildT6();buildT7();buildT8();buildT9();buildT10();
+}
+
+const GRAYBAR='rgba(180,176,168,0.8)';
+function initAllCharts(){
+  const active=document.querySelector('.pane.on');
+  if(active)initChartsFor(active.id);
+}
+function initChartsFor(id){
+  if(id==='t1')initT1();
+  else if(id==='t2')initT2();
+  else if(id==='t3')initT3();
+  else if(id==='t4')initT4();
+  else if(id==='t5')initT5();
+  else if(id==='t6')initT6();
+  else if(id==='t7')initT7();
+  else if(id==='t8'){/* T8 is table-only, no Chart.js init needed */}
+  else if(id==='t9')initT9();
+  else if(id==='t10')initT10();
+}
+
+const baseOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}};
+
+function initT1(){
+  const wfSteps=[
+    [t('s2a'),'#A8C5DA',0,27.27,'pos'],
+    [LANG==='ja'?'舞台劇':'舞台劇','#E8A598',27.27,54.95,'pos'],
+    [LANG==='ja'?'授權金':'授權金','#C5B4E3',54.95,75.20,'pos'],
+    [LANG==='ja'?'周辺商品':'周邊商品','#A8D5B5',75.20,81.87,'pos'],
+    ['Mirafeel','#F5D4A0',81.87,82.15,'pos'],
+    [LANG==='ja'?'その他':'其他','#D4C5B0',82.15,83.52,'pos'],
+    ['巧連智(D)','#fca5a5',83.52,82.71,'neg'],
+    ['巧連智(S)','#fca5a5',82.71,81.33,'neg'],
+    [LANG==='ja'?'跨境':'跨境','#fca5a5',81.33,81.25,'neg'],
+    [LANG==='ja'?'事業計 →':'事業計 →','#c0bdb8',0,81.25,'total'],
+    [LANG==='ja'?'人件費':'人件費','#F5A8A0',81.25,53.25,'neg'],
+    [LANG==='ja'?'一般管理費':'一般管費','#F5A8A0',53.25,6.69,'neg'],
+    [LANG==='ja'?'営業費用':'營業費用','#F5A8A0',6.69,-17.94,'neg'],
+    [LANG==='ja'?'成本戻り':'成本退回','#B5EAD7',-17.94,-10.34,'pos'],
+    [LANG==='ja'?'営業利潤 →':'營業利潤 →','#e8b0aa',0,-10.34,'total']
+  ];
+  const lbls=wfSteps.map(s=>s[0]);
+  const clrs=wfSteps.map(s=>s[1]);
+  const data=wfSteps.map(s=>[s[2],s[3]]);
+  mkChart('cvs-wf',{type:'bar',data:{labels:lbls,datasets:[{data,backgroundColor:clrs,borderWidth:0,barThickness:20}]},
+    options:{...baseOpts,indexAxis:'y',
+      plugins:{...baseOpts.plugins,
+        tooltip:{callbacks:{label:ctx=>{const[b,t]=ctx.raw;const v=(t-b).toFixed(2);return (t>b?'+':'')+v+'M NTD';}}},
+        afterDatasetsDraw:undefined
+      },
+      scales:{
+        x:{grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10},callback:v=>v+'M'},title:{display:false}},
+        y:{grid:{display:false},ticks:{color:'#1a1916',font:{size:10.5}}}
+      }
+    },
+    plugins:[{id:'wfLbl',afterDatasetsDraw(chart){
+      chart.data.datasets.forEach((ds,di)=>{
+        const meta=chart.getDatasetMeta(di);
+        meta.data.forEach((bar,i)=>{
+          const[b,t]=ds.data[i];const v=t-b;if(Math.abs(v)<0.15)return;
+          const ctx=chart.ctx;ctx.save();
+          ctx.fillStyle=v>=0?'#1d7a5f':'#b83a2e';
+          ctx.font='bold 10px SF Mono,Consolas,monospace';
+          ctx.textAlign='center';ctx.textBaseline='middle';
+          const xPos=chart.scales.x.getPixelForValue((b+t)/2);
+          ctx.fillText((v>0?'+':'')+v.toFixed(1)+'M',xPos,bar.y);
+          ctx.restore();
+        });
+      });
+    }}]
+  });
+
+  const revBiz=D.pl.filter(r=>r.rev>0&&r.id!=='ky');
+  const showLbl=['gk','st','lc','hb','mr'];
+  const donutLbls=revBiz.map(r=>D.plNames[LANG][D.pl.indexOf(r)]);
+  mkChart('cvs-rev-donut',{type:'doughnut',data:{
+    labels:donutLbls,
+    datasets:[{data:revBiz.map(r=>r.rev),backgroundColor:revBiz.map(r=>r.clr),borderWidth:1,borderColor:'#fff'}]
+  },options:{...baseOpts,plugins:{
+    legend:{display:true,position:'right',labels:{font:{size:10},color:'#6b6860',padding:5,boxWidth:10}},
+    tooltip:{callbacks:{label:ctx=>ctx.label+': '+M(ctx.raw)+'M'}}
+  }},plugins:[{id:'dnutLbl',afterDatasetsDraw(chart){
+    const {ctx}=chart;
+    const meta=chart.getDatasetMeta(0);
+    const ds=chart.data.datasets[0];
+    const total=ds.data.reduce((a,v)=>a+v,0);
+    meta.data.forEach((arc,i)=>{
+      const biz=revBiz[i];
+      if(!showLbl.includes(biz.id))return;
+      const v=ds.data[i];
+      const pct=(v/total*100).toFixed(1)+'%';
+      const nm=D.plNames[LANG][D.pl.indexOf(biz)];
+      const ma=(arc.startAngle+arc.endAngle)/2;
+      const inArc=v/total>0.05;
+      const rad=inArc?(arc.outerRadius+arc.innerRadius)/2:arc.outerRadius+24;
+      const x=arc.x+Math.cos(ma)*rad;
+      const y=arc.y+Math.sin(ma)*rad;
+      ctx.save();
+      if(!inArc){
+        ctx.strokeStyle='#ccc9c0';ctx.lineWidth=0.8;
+        ctx.beginPath();
+        ctx.moveTo(arc.x+Math.cos(ma)*(arc.outerRadius+2),arc.y+Math.sin(ma)*(arc.outerRadius+2));
+        ctx.lineTo(x,y);ctx.stroke();
+        ctx.fillStyle='#6b6860';
+        ctx.font='8.5px -apple-system,BlinkMacSystemFont,sans-serif';
+        ctx.textAlign=Math.cos(ma)>0.1?'left':Math.cos(ma)<-0.1?'right':'center';
+        ctx.textBaseline='middle';
+        ctx.fillText(nm+' '+pct,x+(Math.cos(ma)>0?3:-3),y);
+      } else {
+        const cx=arc.x+Math.cos(ma)*(arc.outerRadius+arc.innerRadius)/2;
+        const cy=arc.y+Math.sin(ma)*(arc.outerRadius+arc.innerRadius)/2;
+        ctx.fillStyle='rgba(255,255,255,0.92)';
+        ctx.font='bold 9px -apple-system,BlinkMacSystemFont,sans-serif';
+        ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(nm,cx,cy-6);
+        ctx.font='9px SF Mono,Consolas,monospace';
+        ctx.fillText(pct,cx,cy+6);
+      }
+      ctx.restore();
+    });
+  }}]});
+
+  const mbiz=D.pl.filter(r=>r.rev>0&&r.id!=='ky');
+  const mnames=mbiz.map((_,i)=>D.plNames[LANG][D.pl.indexOf(mbiz[i])]);
+  mkChart('cvs-margin',{type:'bar',data:{
+    labels:mnames,
+    datasets:[{data:mbiz.map(r=>+(r.profit/r.rev*100).toFixed(1)),backgroundColor:mbiz.map(r=>r.profit>=0?r.clr:'#fca5a5'),borderWidth:0}]
+  },options:{...baseOpts,
+    scales:{
+      x:{grid:{display:false},ticks:{color:'#9c9a94',font:{size:9.5}}},
+      y:{grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10},callback:v=>v+'%'}}
+    },plugins:{...baseOpts.plugins,tooltip:{callbacks:{label:ctx=>(ctx.raw>0?'+':'')+ctx.raw+'%'}}}},
+    plugins:[valLbl('#1a1916','9.5px',v=>(v>0?'+':v<0?'▲':'')+Math.abs(v).toFixed(1)+'%')]
+  });
+
+  const jpyLbls=t('jpy_biz');
+  const jpyRevClr=['#A8C5DA','#E8A598','#C5B4E3','#D4C5B0','#B5EAD7','#6b6860'];
+  const jpyEbiClr=['#4A7A9B','#B05040','#7A5AAB','#F5A8A0','#3A8A55','#b83a2e'];
+  mkChart('cvs-jpy',{type:'bar',
+    data:{labels:jpyLbls,datasets:[
+      {label:t('jpy_rev'),data:D.jpy.rev,backgroundColor:jpyRevClr,borderWidth:0,borderRadius:2},
+      {label:t('jpy_ebitda'),data:D.jpy.ebitda,backgroundColor:jpyEbiClr,borderWidth:0,borderRadius:2}
+    ]},
+    options:{...baseOpts,
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#9c9a94',font:{size:10}}},
+        y:{grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10},callback:v=>v+'M'},
+          title:{display:true,text:'百万円',color:'#9c9a94',font:{size:9}}}
+      },
+      plugins:{...baseOpts.plugins,
+        legend:{display:true,position:'top',labels:{font:{size:10},padding:8,boxWidth:10,color:'#6b6860'}},
+        tooltip:{callbacks:{label:ctx=>{const v=ctx.raw;if(v===null)return null;return ctx.dataset.label+': '+(v>=0?'+':'')+v+'M JPY';}}}
+      }
+    },
+    plugins:[{id:'jpyLbl',afterDatasetsDraw(chart){
+      chart.data.datasets.forEach((ds,di)=>{
+        const meta=chart.getDatasetMeta(di);
+        meta.data.forEach((bar,i)=>{
+          const v=ds.data[i];
+          if(v===null||v===undefined||Math.abs(v)<8)return;
+          const ctx=chart.ctx;ctx.save();
+          ctx.fillStyle=v>=0?'#1d7a5f':'#b83a2e';
+          ctx.font='bold 9px SF Mono,Consolas,monospace';
+          ctx.textAlign='center';
+          ctx.textBaseline=v>=0?'bottom':'top';
+          ctx.fillText((v>=0?'+':v<0?'▲':'')+Math.abs(v),bar.x,v>=0?bar.y-2:bar.y+2);
+          ctx.restore();
+        });
+      });
+    }}]
+  });
+}
+
+function initT2(){
+  const vOpts={...baseOpts,scales:{
+    x:{grid:{display:false},ticks:{color:'#9c9a94',font:{size:10}}},
+    y:{grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10},callback:v=>(v/1e6).toFixed(1)+'M'}}
+  }};
+  const hOpts={...baseOpts,indexAxis:'y',scales:{
+    x:{grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10},callback:v=>(v/1e6).toFixed(1)+'M'}},
+    y:{grid:{display:false},ticks:{color:'#1a1916',font:{size:10.5}}}
+  }};
+  const activeSub=(document.querySelector('.sp.on[data-g="s2"]')||{}).id||'s2a';
+  const bd=D.bizDetail;
+
+  if(activeSub==='s2a'){
+    mkChart('cvs-gk-m',{type:'bar',data:{labels:D.mLbl,datasets:[{data:D.cubeMonth.gk,backgroundColor:'#A8C5DA',borderWidth:0}]},options:vOpts,plugins:[valLbl('#4A7A9B','9px')]});
+    const gkch=D.cubeCh.gk;
+    mkChart('cvs-gk-ch',{type:'bar',data:{labels:Object.keys(gkch).map(chLbl),datasets:[{data:Object.values(gkch),backgroundColor:'#A8C5DA',borderWidth:0}]},options:hOpts,plugins:[valLbl('#4A7A9B','9px')]});
+    const pd=bd.gk.priceDist;
+    var yoyLbls=LANG==='ja'?['販売数量','平均単価','売上']:['銷售數量','平均單價','銷售額'];
+    var fy25i=[Math.round(20904/17798*100),Math.round(2797/3182*100),Math.round(bd.gk.rev25/bd.gk.rev24*100)];
+    var bgC=fy25i.map(function(v){return v>=100?'#A8C5DA':'#F5A8A0';});
+    mkChart('cvs-gk-yoy',{type:'bar',
+      data:{labels:yoyLbls,datasets:[
+        {label:'FY24',data:[100,100,100],backgroundColor:'#D4C5B0',borderWidth:0,borderRadius:2},
+        {label:'FY25',data:fy25i,backgroundColor:bgC,borderWidth:0,borderRadius:2}
+      ]},
+      options:{...baseOpts,
+        scales:{
+          x:{grid:{display:false},ticks:{color:'#1a1916',font:{size:10.5}}},
+          y:{grid:{color:'#e2dfd8'},min:70,max:130,ticks:{color:'#9c9a94',font:{size:10}},
+            title:{display:true,text:'FY24=100',color:'#9c9a94',font:{size:9}}}
+        },
+        plugins:{...baseOpts.plugins,
+          legend:{display:true,position:'top',labels:{font:{size:10},padding:8,boxWidth:10,color:'#6b6860'}}}
+      },
+      plugins:[{id:'yLbl',afterDatasetsDraw:function(chart){
+        chart.data.datasets.forEach(function(ds,di){
+          if(di===0)return;
+          chart.getDatasetMeta(di).data.forEach(function(bar,idx){
+            var v=ds.data[idx];var diff=v-100;
+            var txt=(diff>=0?'+':'')+diff+'%';
+            var cx=chart.ctx;cx.save();
+            cx.fillStyle=diff>=0?'#1d7a5f':'#b83a2e';
+            cx.font='bold 10px SF Mono,Consolas,monospace';
+            cx.textAlign='center';cx.textBaseline='bottom';
+            cx.fillText(txt,bar.x,bar.y-3);cx.restore();
+          });
+        });
+      }}]
+    });
+    mkChart('cvs-gk-price',{type:'bar',
+      data:{labels:pd.map(r=>r.lb),datasets:[
+        {label:LANG==='ja'?'売上（左軸）':'銷售額（左軸）',data:pd.map(r=>r.rev),backgroundColor:'#A8C5DA',yAxisID:'y',borderWidth:0,borderRadius:2},
+        {label:LANG==='ja'?'数量（右軸）':'數量（右軸）',data:pd.map(r=>r.cnt),backgroundColor:'rgba(197,180,227,0.6)',yAxisID:'y1',borderWidth:0,borderRadius:2}
+      ]},
+      options:{...baseOpts,scales:{
+        x:{grid:{display:false},ticks:{color:'#1a1916',font:{size:10.5}}},
+        y:{grid:{color:'#e2dfd8'},ticks:{color:'#4A7A9B',font:{size:9.5},callback:v=>(v/1e6).toFixed(0)+'M'},title:{display:true,text:'売上',color:'#4A7A9B',font:{size:9}}},
+        y1:{grid:{display:false},ticks:{color:'#7A5AAB',font:{size:9.5},callback:v=>v>=1000?(v/1000).toFixed(0)+'K':v},position:'right',title:{display:true,text:'数量',color:'#7A5AAB',font:{size:9}}}
+      },plugins:{...baseOpts.plugins,legend:{display:true,position:'top',labels:{font:{size:10},padding:6,boxWidth:10,color:'#6b6860'}}}}
+    });
+  } else if(activeSub==='s2b'){
+    mkChart('cvs-hb-m',{type:'bar',data:{labels:D.mLbl,datasets:[{data:D.cubeMonth.hb,backgroundColor:'#A8D5B5',borderWidth:0}]},options:vOpts,plugins:[valLbl('#3A8A55','9px')]});
+    const hbChRevs=bd.hb.chRev;
+    const hbClrs=hbChRevs.map(r=>r.ch==='舞台劇'?'#E8A598':'#A8D5B5');
+    mkChart('cvs-hb-ch2',{type:'bar',
+      data:{labels:hbChRevs.map(r=>r.ch),datasets:[{data:hbChRevs.map(r=>r.rev),backgroundColor:hbClrs,borderWidth:0,borderRadius:2}]},
+      options:{...hOpts,plugins:{...hOpts.plugins,tooltip:{callbacks:{label:ctx=>`${(ctx.raw/1e6).toFixed(2)}M (${(ctx.raw/bd.hb.rev25*100).toFixed(0)}%)`}}}},
+      plugins:[{id:'hbLbl',afterDatasetsDraw(chart){chart.data.datasets.forEach((ds,di)=>{chart.getDatasetMeta(di).data.forEach((bar,i)=>{const v=ds.data[i];const ctx=chart.ctx;ctx.save();ctx.fillStyle='#3A8A55';ctx.font='9px SF Mono,Consolas,monospace';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText((v/1e6).toFixed(2)+'M ('+Math.round(v/bd.hb.rev25*100)+'%)',bar.x+4,bar.y);ctx.restore();});});}}]
+    });
+    const hbpd=bd.hb.priceDist;
+    mkChart('cvs-hb-price',{type:'bar',
+      data:{labels:hbpd.map(r=>r.lb),datasets:[
+        {label:LANG==='ja'?'売上':'銷售額',data:hbpd.map(r=>r.rev),backgroundColor:'#A8D5B5',yAxisID:'y',borderWidth:0,borderRadius:2},
+        {label:LANG==='ja'?'SKU数':'SKU數',data:hbpd.map(r=>r.sku),backgroundColor:'rgba(168,213,181,0.4)',yAxisID:'y1',borderWidth:0,borderRadius:2}
+      ]},
+      options:{...baseOpts,scales:{
+        x:{grid:{display:false},ticks:{color:'#1a1916',font:{size:10.5}}},
+        y:{grid:{color:'#e2dfd8'},ticks:{color:'#3A8A55',font:{size:9.5},callback:v=>(v/1e6).toFixed(1)+'M'}},
+        y1:{grid:{display:false},ticks:{color:'#7A5AAB',font:{size:9.5}},position:'right',title:{display:true,text:'SKU',color:'#7A5AAB',font:{size:9}}}
+      },plugins:{...baseOpts.plugins,legend:{display:true,position:'top',labels:{font:{size:10},padding:6,boxWidth:10,color:'#6b6860'}}}}
+    });
+  } else if(activeSub==='s2c'){
+    const mrVOpts={...vOpts,scales:{x:vOpts.scales.x,y:{...vOpts.scales.y,ticks:{color:'#9c9a94',font:{size:10},callback:v=>(v/1000).toFixed(0)+'K'}}}};
+    mkChart('cvs-mr-m',{type:'bar',data:{labels:D.mLbl,datasets:[{data:D.cubeMonth.mr,backgroundColor:'#F5D4A0',borderWidth:0}]},options:mrVOpts,plugins:[valLbl('#C07820','9px')]});
+    const mrch=D.cubeCh.mr;
+    mkChart('cvs-mr-ch',{type:'doughnut',data:{labels:Object.keys(mrch).map(chLbl),datasets:[{data:Object.values(mrch),backgroundColor:['#F5D4A0','#F5C880','#F7DDB0'],borderWidth:1,borderColor:'#fff'}]},options:{...baseOpts,plugins:{legend:{display:true,position:'right',labels:{font:{size:10},padding:8,boxWidth:10,color:'#6b6860'}},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${(ctx.raw/1000).toFixed(0)}K`}}}}});
+    const mfg=bd.mf.grp;
+    const mfTotal=mfg.reduce((a,r)=>a+r.rev,0);
+    mkChart('cvs-mf-grp',{type:'bar',
+      data:{labels:mfg.map(r=>r.g),datasets:[
+        {label:LANG==='ja'?'売上（NTD）':'銷售額（NTD）',data:mfg.map(r=>r.rev),backgroundColor:['#F5D4A0','#F5C880','#F7DDB0','#E8E0D0'],borderWidth:0,borderRadius:3},
+      ]},
+      options:{...baseOpts,indexAxis:'y',scales:{
+        x:{grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10},callback:v=>(v/1e6).toFixed(2)+'M'}},
+        y:{grid:{display:false},ticks:{color:'#1a1916',font:{size:11}}}
+      },plugins:{...baseOpts.plugins,tooltip:{callbacks:{label:ctx=>`${(ctx.raw/1e6).toFixed(3)}M (${(ctx.raw/mfTotal*100).toFixed(0)}%)`}}}},
+      plugins:[{id:'mfLbl',afterDatasetsDraw(chart){chart.data.datasets.forEach((ds,di)=>{chart.getDatasetMeta(di).data.forEach((bar,i)=>{const v=ds.data[i];const ctx=chart.ctx;ctx.save();ctx.fillStyle='#C07820';ctx.font='9.5px SF Mono,Consolas,monospace';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText((v/1e6).toFixed(3)+'M ('+(v/mfTotal*100).toFixed(0)+'%)',bar.x+4,bar.y);ctx.restore();});});}}]
+    });
+  } else if(activeSub==='s2d'){
+    initT2Comp();
+  }
+}
+
+function initT3(){
+  const names=D.stage.map(s=>s.name);
+  const revs=D.stage.map(s=>s.rev);
+  const atts=D.stage.map(s=>s.att);
+  const prices=D.stage.map(s=>s.avg);
+  const clrs=D.stage.map(s=>s.avg<200?'#fca5a5':s.avg>1200?'#E8A598':'#F5C5B5');
+  const xOpts={grid:{display:false},ticks:{color:'#9c9a94',font:{size:9.5}}};
+  const yN={grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10}}};
+
+  const yoy=D.stageYoY;
+  const yoyLbls=LANG==='ja'
+    ?['人次（万人）','票房（百万NTD）','平均票価（NTD）']
+    :['人次（萬人）','票房（百萬NTD）','平均票價（NTD）'];
+  mkChart('cvs-st-yoy',{type:'bar',
+    data:{labels:yoyLbls,datasets:[
+      {label:'FY24',data:[yoy.fy24.att/1e4, yoy.fy24.rev/1e6, yoy.fy24.avg],backgroundColor:'#D4C5B0',borderWidth:0,borderRadius:2},
+      {label:'FY25',data:[yoy.fy25.att/1e4, yoy.fy25.rev/1e6, yoy.fy25.avg],backgroundColor:'#E8A598',borderWidth:0,borderRadius:2}
+    ]},
+    options:{...baseOpts,
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#1a1916',font:{size:10.5}}},
+        y:{grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10}}}
+      },
+      plugins:{...baseOpts.plugins,
+        legend:{display:true,position:'top',labels:{font:{size:10},padding:8,boxWidth:10,color:'#6b6860'}},
+        tooltip:{callbacks:{label:ctx=>{const v=ctx.raw;const lbl=ctx.dataset.label;const idx=ctx.dataIndex;if(idx===0)return lbl+': '+(v*1e4/1e4).toFixed(1)+'万人';if(idx===1)return lbl+': '+v.toFixed(1)+'M NTD';return lbl+': '+v.toLocaleString()+' NTD';}}}
+      }
+    },
+    plugins:[{id:'yoyLbl',afterDatasetsDraw(chart){
+      chart.data.datasets.forEach((ds,di)=>{
+        chart.getDatasetMeta(di).data.forEach((bar,i)=>{
+          const v=ds.data[i];
+          const ctx=chart.ctx;ctx.save();
+          ctx.fillStyle=di===0?'#8A7A60':'#B05040';
+          ctx.font='bold 9px SF Mono,Consolas,monospace';
+          ctx.textAlign='center';ctx.textBaseline='bottom';
+          const lbl=i===0?(v*1e4/1000).toFixed(0)+'K':i===1?v.toFixed(1)+'M':v.toFixed(0);
+          ctx.fillText(lbl,bar.x,bar.y-2);
+          ctx.restore();
+        });
+      });
+    }}]
+  });
+
+  const bizLbls=t('c3_biz_lbl');
+  mkChart('cvs-st-biz',{type:'bar',
+    data:{labels:['FY24','FY25'],datasets:[
+      {label:bizLbls[0],data:[yoy.fy24.bizAtt, yoy.fy25.bizAtt],backgroundColor:'#FFF4A3',borderWidth:0,stack:'s'},
+      {label:bizLbls[1],data:[yoy.fy24.att-yoy.fy24.bizAtt, yoy.fy25.att-yoy.fy25.bizAtt],backgroundColor:'#E8A598',borderWidth:0,stack:'s'}
+    ]},
+    options:{...baseOpts,
+      scales:{
+        x:{stacked:true,grid:{display:false},ticks:{color:'#1a1916',font:{size:11}}},
+        y:{stacked:true,grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10},callback:v=>(v/1000).toFixed(0)+'K'}}
+      },
+      plugins:{...baseOpts.plugins,
+        legend:{display:true,position:'top',labels:{font:{size:10},padding:8,boxWidth:10,color:'#6b6860'}},
+        tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+ctx.raw.toLocaleString()+'人 ('+(ctx.raw/(ctx.dataIndex===0?yoy.fy24.att:yoy.fy25.att)*100).toFixed(0)+'%)'}}
+      }
+    },
+    plugins:[{id:'bizLbl',afterDatasetsDraw(chart){
+      chart.data.datasets.forEach((ds,di)=>{
+        chart.getDatasetMeta(di).data.forEach((bar,i)=>{
+          const v=ds.data[i];if(v<2000)return;
+          const total=i===0?yoy.fy24.att:yoy.fy25.att;
+          const pct=(v/total*100).toFixed(0)+'%';
+          const ctx=chart.ctx;ctx.save();
+          ctx.fillStyle='#1a1916';ctx.font='9px SF Mono,Consolas,monospace';
+          ctx.textAlign='center';ctx.textBaseline='middle';
+          ctx.fillText((v/1000).toFixed(1)+'K ('+pct+')',bar.x,(bar.y+bar.base)/2);
+          ctx.restore();
+        });
+      });
+    }}]
+  });
+
+  mkChart('cvs-st-rev',{type:'bar',data:{labels:names,datasets:[{data:revs,backgroundColor:'#E8A598',borderWidth:0}]},
+    options:{...baseOpts,scales:{x:xOpts,y:{...yN,ticks:{...yN.ticks,callback:v=>(v/1e6).toFixed(1)+'M'}}}},
+    plugins:[valLbl('#B05040','9px')]});
+  mkChart('cvs-st-att',{type:'bar',data:{labels:names,datasets:[{data:atts,backgroundColor:'#A8C5DA',borderWidth:0}]},
+    options:{...baseOpts,scales:{x:xOpts,y:{...yN,ticks:{...yN.ticks,callback:v=>(v/1000).toFixed(0)+'K'}}}},
+    plugins:[valLbl('#4A7A9B','9px',v=>(v/1000).toFixed(1)+'K')]});
+  mkChart('cvs-st-price',{type:'bar',data:{labels:names,datasets:[{data:prices,backgroundColor:clrs,borderWidth:0}]},
+    options:{...baseOpts,scales:{x:xOpts,y:{...yN,ticks:{...yN.ticks,callback:v=>v.toLocaleString()}}}},
+    plugins:[valLbl('#B05040','9px',v=>v.toLocaleString())]});
+}
+
+function initT4(){
+  const vendNames=D.licVendors.map(v=>v.name);
+  const vendVals=D.licVendors.map(v=>v.total);
+  const vendClrs=D.licVendors.map(v=>v.cat==='MD'?'#C5B4E3':'#A8C5DA');
+  mkChart('cvs-lic-v',{type:'bar',data:{labels:vendNames,datasets:[{data:vendVals,backgroundColor:vendClrs,borderWidth:0}]},
+    options:{...baseOpts,indexAxis:'y',scales:{
+      x:{grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10},callback:v=>(v/1e6).toFixed(1)+'M'}},
+      y:{grid:{display:false},ticks:{color:'#1a1916',font:{size:10}}}
+    }},plugins:[valLbl('#7A5AAB','9px')]});
+  const mdT=D.licCat.md.reduce((a,v)=>a+v,0);const anT=D.licCat.an.reduce((a,v)=>a+v,0);
+  mkChart('cvs-lic-cat',{type:'doughnut',data:{labels:[t('c4md'),t('c4an')],datasets:[{data:[mdT,anT],backgroundColor:['#C5B4E3','#A8C5DA'],borderWidth:1,borderColor:'#fff'}]},
+    options:{...baseOpts,plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11},padding:12,boxWidth:12,color:'#6b6860'}},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${M(ctx.raw)}M`}}}}});
+  mkChart('cvs-lic-m',{type:'bar',data:{labels:D.licMLbl,datasets:[
+    {label:t('c4md'),data:D.licCat.md,backgroundColor:'#C5B4E3',stack:'s'},
+    {label:t('c4an'),data:D.licCat.an,backgroundColor:'#A8C5DA',stack:'s'}
+  ]},options:{...baseOpts,
+    scales:{x:{grid:{display:false},stacked:true,ticks:{color:'#9c9a94',font:{size:10}}},y:{grid:{color:'#e2dfd8'},stacked:true,ticks:{color:'#9c9a94',font:{size:10},callback:v=>(v/1e6).toFixed(1)+'M'}}},
+    plugins:{...baseOpts.plugins,legend:{display:true,position:'top',labels:{font:{size:10.5},padding:12,boxWidth:10,color:'#6b6860'}}}}});
+
+  const ld=D.licDetail;
+  const selfT=ld.filter(v=>v.div==='自社').reduce((a,v)=>a+v.fy25,0);
+  const agentT=ld.filter(v=>v.div==='好園地').reduce((a,v)=>a+v.fy25,0);
+  mkChart('cvs-lic-div',{type:'bar',
+    data:{labels:t('c4_div_lbl'),datasets:[{data:[selfT,agentT],backgroundColor:['#A8C5DA','#C5B4E3'],borderWidth:0,borderRadius:3}]},
+    options:{...baseOpts,indexAxis:'y',
+      scales:{x:{grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10},callback:v=>(v/1e6).toFixed(1)+'M'}},
+              y:{grid:{display:false},ticks:{color:'#1a1916',font:{size:11}}}},
+      plugins:{...baseOpts.plugins,tooltip:{callbacks:{label:ctx=>fmtNTD(ctx.raw)+' ('+Math.round(ctx.raw/(selfT+agentT)*100)+'%)'}}}},
+    plugins:[{id:'divLbl',afterDatasetsDraw(chart){chart.data.datasets.forEach((ds,di)=>{chart.getDatasetMeta(di).data.forEach((bar,i)=>{const v=ds.data[i];const ctx=chart.ctx;ctx.save();ctx.fillStyle='#4A7A9B';ctx.font='bold 10px SF Mono,Consolas,monospace';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(fmtNTD(v)+' ('+Math.round(v/(selfT+agentT)*100)+'%)',bar.x+6,bar.y);ctx.restore();});});}}]
+  });
+
+  const patCounts={regular:0,spot:0,oneshot:0};
+  const patAmts={regular:0,spot:0,oneshot:0};
+  ld.filter(v=>v.fy25>0).forEach(v=>{patCounts[v.pat]++;patAmts[v.pat]+=v.fy25;});
+  const patLbls=t('c4_pat_lbl');
+  mkChart('cvs-lic-pat',{type:'bar',
+    data:{labels:patLbls,datasets:[{data:[patAmts.regular,patAmts.spot,patAmts.oneshot],backgroundColor:['#B5EAD7','#FFF4A3','#F5A8A0'],borderWidth:0,borderRadius:3}]},
+    options:{...baseOpts,indexAxis:'y',
+      scales:{x:{grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:9.5},callback:v=>(v/1e6).toFixed(0)+'M'}},
+              y:{grid:{display:false},ticks:{color:'#1a1916',font:{size:10}}}},
+      plugins:{...baseOpts.plugins,tooltip:{callbacks:{label:ctx=>fmtNTD(ctx.raw)+' ('+patCounts[['regular','spot','oneshot'][ctx.dataIndex]]+'社)'}}}},
+    plugins:[{id:'patLbl',afterDatasetsDraw(chart){chart.data.datasets.forEach((ds,di)=>{chart.getDatasetMeta(di).data.forEach((bar,i)=>{const v=ds.data[i];const cnt=[patCounts.regular,patCounts.spot,patCounts.oneshot][i];const ctx=chart.ctx;ctx.save();ctx.fillStyle='#1a1916';ctx.font='9px SF Mono,Consolas,monospace';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(fmtNTD(v)+' ('+cnt+'社)',bar.x+4,bar.y);ctx.restore();});});}}]
+  });
+}
+
+function initT5(){
+  const k=D.kyotsu;
+  const wfBars=[
+    {l:LANG==='ja'?'事業計':'事業計',d:[0,81.25],c:'#c0bdb8'},
+    {l:LANG==='ja'?'▲人件費':'▲人件費',d:[81.25,53.25],c:'#F5A8A0'},
+    {l:LANG==='ja'?'▲一般管理費':'▲一般管費',d:[53.25,6.69],c:'#F5A8A0'},
+    {l:LANG==='ja'?'▲営業費用':'▲營業費用',d:[6.69,-17.94],c:'#F5A8A0'},
+    {l:LANG==='ja'?'+成本戻り':'+成本退回',d:[-17.94,-10.34],c:'#B5EAD7'},
+    {l:LANG==='ja'?'営業利潤':'營業利潤',d:[0,-10.34],c:'#e8b0aa'}
+  ];
+  mkChart('cvs-cost-wf',{type:'bar',
+    data:{labels:wfBars.map(w=>w.l),datasets:[{data:wfBars.map(w=>w.d),backgroundColor:wfBars.map(w=>w.c),borderWidth:0,barThickness:36}]},
+    options:{...baseOpts,
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#1a1916',font:{size:11}}},
+        y:{grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10},callback:v=>v+'M'},title:{display:false}}
+      },
+      plugins:{...baseOpts.plugins,tooltip:{callbacks:{label:ctx=>{const[b,t]=ctx.raw;const v=(t-b).toFixed(2);return (v>0?'+':'')+v+'M NTD';}}}}
+    },
+    plugins:[{id:'costLbl',afterDatasetsDraw(chart){
+      chart.data.datasets.forEach((ds,di)=>{
+        const meta=chart.getDatasetMeta(di);
+        meta.data.forEach((bar,i)=>{
+          const[b,tp]=ds.data[i];const v=tp-b;if(Math.abs(v)<0.5)return;
+          const ctx=chart.ctx;ctx.save();
+          ctx.fillStyle=v>=0?'#1d7a5f':'#b83a2e';
+          ctx.font='bold 10.5px SF Mono,Consolas,monospace';
+          ctx.textAlign='center';ctx.textBaseline=v>=0?'bottom':'top';
+          const yPos=v>=0?Math.min(bar.y,bar.base)-3:Math.max(bar.y,bar.base)+3;
+          ctx.fillText((v>0?'+':'')+v.toFixed(1)+'M',bar.x,yPos);
+          ctx.restore();
+        });
+      });
+    }}]
+  });
+
+  const drillOpts={...baseOpts,indexAxis:'y',scales:{
+    x:{grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:9.5},callback:v=>(v/1e6).toFixed(0)+'M'}},
+    y:{grid:{display:false},ticks:{color:'#1a1916',font:{size:10}}}
+  }};
+  mkChart('cvs-drill-hc',{type:'bar',
+    data:{labels:D.kyoDrill.hc.labs,datasets:[{data:D.kyoDrill.hc.vals,backgroundColor:'#F5A8A0',borderWidth:0,borderRadius:2}]},
+    options:drillOpts,
+    plugins:[{id:'hcLbl',afterDatasetsDraw(chart){chart.data.datasets.forEach((ds,di)=>{chart.getDatasetMeta(di).data.forEach((bar,i)=>{const v=ds.data[i];if(!v)return;const ctx=chart.ctx;ctx.save();ctx.fillStyle='#8b3a2a';ctx.font='9px SF Mono,Consolas,monospace';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText((v/1e6).toFixed(1)+'M',bar.x+4,bar.y);ctx.restore();});});}}]
+  });
+  mkChart('cvs-drill-gm',{type:'bar',
+    data:{labels:D.kyoDrill.gm.labs,datasets:[{data:D.kyoDrill.gm.vals,backgroundColor:'#C5B4E3',borderWidth:0,borderRadius:2}]},
+    options:drillOpts,
+    plugins:[{id:'gmLbl',afterDatasetsDraw(chart){chart.data.datasets.forEach((ds,di)=>{chart.getDatasetMeta(di).data.forEach((bar,i)=>{const v=ds.data[i];if(!v)return;const ctx=chart.ctx;ctx.save();ctx.fillStyle='#5a3a8b';ctx.font='9px SF Mono,Consolas,monospace';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText((v/1e6).toFixed(1)+'M',bar.x+4,bar.y);ctx.restore();});});}}]
+  });
+  mkChart('cvs-drill-opex',{type:'bar',
+    data:{labels:D.kyoDrill.opex.labs,datasets:[{data:D.kyoDrill.opex.vals,backgroundColor:'#A8C5DA',borderWidth:0,borderRadius:2}]},
+    options:drillOpts,
+    plugins:[{id:'opexLbl',afterDatasetsDraw(chart){chart.data.datasets.forEach((ds,di)=>{chart.getDatasetMeta(di).data.forEach((bar,i)=>{const v=ds.data[i];if(!v)return;const ctx=chart.ctx;ctx.save();ctx.fillStyle='#2a5a8b';ctx.font='9px SF Mono,Consolas,monospace';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText((v/1e6).toFixed(1)+'M',bar.x+4,bar.y);ctx.restore();});});}}]
+  });
+}
+
+function initT6(){
+  const b=D.bcl;const l=D.ltv;
+  const activeSub=(document.querySelector('.sp.on[data-g="t6s"]')||{}).id||'t6-db';
+
+  if(activeSub==='t6-db'){
+    const s7=b.seg7;
+    const seg7vals=[s7.preg,s7.s06,s7.ss712,s7.s1324,s7.aa2536,s7.a3760,s7.b61p];
+    const seg7lbls=t('seg7_labels');
+    const seg7clrs=['#F5D4A0','#A8C5DA','#AED6F1','#B5EAD7','#B5EAD7','#FFF4A3','#D4C5B0'];
+    mkChart('cvs-bcl-age7',{type:'doughnut',
+      data:{labels:seg7lbls,datasets:[{data:seg7vals,backgroundColor:seg7clrs,borderWidth:1,borderColor:'#fff'}]},
+      options:{...baseOpts,plugins:{
+        legend:{display:true,position:'right',labels:{font:{size:10},color:'#6b6860',padding:4,boxWidth:10}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw.toLocaleString()} (${(ctx.raw/b.valid*100).toFixed(1)}%)`}}
+      }}
+    });
+
+    mkChart('cvs-ltv-freq',{type:'bar',data:{labels:l.freqLbl,datasets:[{data:l.freq,backgroundColor:['#4A7A9B','#A8C5DA','#B5EAD7','#F5D4A0','#E8A598','#F5A8A0'],borderWidth:0}]},
+      options:{...baseOpts,scales:{x:{grid:{display:false},ticks:{color:'#9c9a94',font:{size:10.5}}},y:{grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10},callback:v=>v.toLocaleString()}}},
+      plugins:{...baseOpts.plugins,tooltip:{callbacks:{label:ctx=>`${ctx.raw.toLocaleString()}人`}}}},
+      plugins:[valLbl('#1a1916','9.5px')]});
+
+    const bLbls=t('bind_labels');
+    const bRevs=[l.bound.yes.rev,l.bound.no.rev];const bTx=[l.bound.yes.tx,l.bound.no.tx];
+    mkChart('cvs-ltv-bind',{type:'bar',data:{labels:bLbls,datasets:[
+      {label:LANG==='ja'?'売上金額（NTD）':'銷售額（NTD）',data:bRevs,backgroundColor:['#A8C5DA','#D4C5B0'],borderWidth:0,yAxisID:'y'},
+      {label:LANG==='ja'?'取引件数':'交易件數',data:bTx,backgroundColor:['rgba(74,122,155,0.3)','rgba(180,176,168,0.3)'],borderWidth:1,borderColor:['#4A7A9B','#9ca3af'],yAxisID:'y1',type:'bar'}
+    ]},options:{...baseOpts,
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#1a1916',font:{size:10.5}}},
+        y:{grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10},callback:v=>(v/1e6).toFixed(0)+'M'},position:'left'},
+        y1:{grid:{display:false},ticks:{color:'#9c9a94',font:{size:10},callback:v=>(v/1000).toFixed(0)+'K'},position:'right'}
+      },
+      plugins:{...baseOpts.plugins,legend:{display:true,position:'top',labels:{font:{size:10},padding:10,boxWidth:10,color:'#6b6860'}}}}});
+  }
+
+  if(activeSub==='t6-acq'){
+    mkChart('cvs-bcl-new',{type:'bar',
+      data:{labels:b.mLbl24,datasets:[
+        {label:t('c6_valid_lbl'),data:b.mNewValid,backgroundColor:'#A8C5DA',stack:'s',borderWidth:0},
+        {label:t('c6_invalid_lbl'),data:b.mNewInvalid,backgroundColor:'#F5A8A0',stack:'s',borderWidth:0}
+      ]},
+      options:{...baseOpts,
+        scales:{
+          x:{stacked:true,grid:{display:false},ticks:{color:'#9c9a94',font:{size:9},maxRotation:0}},
+          y:{stacked:true,grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10},callback:v=>v>=1000?(v/1000).toFixed(0)+'K':v}}
+        },
+        plugins:{...baseOpts.plugins,
+          legend:{display:true,position:'top',labels:{font:{size:10},padding:8,boxWidth:10,color:'#6b6860'}},
+          tooltip:{callbacks:{footer:items=>{const i=items[0].dataIndex;const tot=b.mNewValid[i]+b.mNewInvalid[i];return `合計: ${tot.toLocaleString()}`;}}}
+        }
+      },
+      plugins:[{id:'newLbl',afterDatasetsDraw(chart){
+        const ds=chart.data.datasets[0];
+        const meta=chart.getDatasetMeta(0);
+        meta.data.forEach((bar,i)=>{
+          const tot=b.mNewValid[i]+b.mNewInvalid[i];
+          if(tot<500)return;
+          const ctx=chart.ctx;ctx.save();
+          ctx.fillStyle='#4A7A9B';ctx.font='bold 8.5px SF Mono,Consolas,monospace';
+          ctx.textAlign='center';ctx.textBaseline='bottom';
+          const yBase=Math.min(bar.y,chart.getDatasetMeta(1).data[i].y);
+          ctx.fillText(tot>=1000?(tot/1000).toFixed(1)+'K':tot,bar.x,yBase-2);
+          ctx.restore();
+        });
+      }}]
+    });
+
+    const mc=b.mCross;
+    const segClrs=['#F5D4A0','#A8C5DA','#AED6F1','#B5EAD7','#C5B4E3','#FFF4A3','#D4C5B0'];
+    const segKeys=['preg','s06','ss712','s1324','aa2536','a3760','b61p'];
+    const seg7lbls2=t('seg7_labels');
+    mkChart('cvs-bcl-cross',{type:'bar',
+      data:{labels:b.mLbl24,datasets:segKeys.map((k,i)=>({
+        label:seg7lbls2[i],data:mc[k],backgroundColor:segClrs[i],stack:'s',borderWidth:0
+      }))},
+      options:{...baseOpts,
+        scales:{
+          x:{stacked:true,grid:{display:false},ticks:{color:'#9c9a94',font:{size:9},maxRotation:0}},
+          y:{stacked:true,grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10},callback:v=>v>=1000?(v/1000).toFixed(0)+'K':v}}
+        },
+        plugins:{...baseOpts.plugins,
+          legend:{display:true,position:'top',labels:{font:{size:9.5},padding:6,boxWidth:10,color:'#6b6860'}}
+        }
+      }
+    });
+
+    const sb=b.srcBlock;
+    const sbNames=sb.map(s=>s.name);
+    const sbRates=sb.map(s=>+(s.invalid/(s.valid+s.invalid)*100).toFixed(1));
+    const sbClrs=sbRates.map(r=>r<15?'#B5EAD7':r<25?'#FFF4A3':'#F5A8A0');
+    mkChart('cvs-bcl-block',{type:'bar',
+      data:{labels:sbNames,datasets:[{data:sbRates,backgroundColor:sbClrs,borderWidth:0,borderRadius:2}]},
+      options:{...baseOpts,indexAxis:'y',
+        scales:{
+          x:{grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10},callback:v=>v+'%'},max:50},
+          y:{grid:{display:false},ticks:{color:'#1a1916',font:{size:10.5}}}
+        },
+        plugins:{...baseOpts.plugins,tooltip:{callbacks:{label:ctx=>{const s=b.srcBlock[ctx.dataIndex];return [`封鎖率: ${ctx.raw}%`,`有効: ${s.valid.toLocaleString()}`,`無効: ${s.invalid.toLocaleString()}`];}}}}
+      },
+      plugins:[{id:'blockLbl',afterDatasetsDraw(chart){
+        chart.data.datasets.forEach((ds,di)=>{
+          chart.getDatasetMeta(di).data.forEach((bar,i)=>{
+            const v=ds.data[i];
+            const ctx=chart.ctx;ctx.save();
+            ctx.fillStyle=v<15?'#1d7a5f':v<25?'#96600a':'#b83a2e';
+            ctx.font='bold 9.5px SF Mono,Consolas,monospace';
+            ctx.textAlign='left';ctx.textBaseline='middle';
+            ctx.fillText(v+'%',bar.x+4,bar.y);
+            ctx.restore();
+          });
+        });
+      }}]
+    });
+  }
+}
+
+const D7={
+  chLbls:['TM×綁定','TM×未綁定','WEB×綁定','WEB×未綁定','KOL×綁定','KOL×未綁定'],
+  chRates:[22.2,15.6,24.3,12.3,20.1,11.6],
+  repeatGapM:[1,2,3,4,5,6,7,8,9,10,11],
+  repeatGapC:[353,237,193,156,164,101,122,70,58,229,15],
+  repeatGapCum:[20.8,34.8,46.1,55.3,65.0,70.9,78.1,82.2,85.6,99.1,100],
+  bizRepRate:[{biz:'Mirafeel',rate:41.5,clr:'#F5D4A0'},{biz:'周辺商品',rate:24.9,clr:'#A8D5B5'},{biz:'学習商品',rate:12.6,clr:'#A8C5DA'}],
+  months12:['25/04','25/05','25/06','25/07','25/08','25/09','25/10','25/11','25/12','26/01','26/02','26/03'],
+  newRev:[3.29,8.11,3.57,3.22,3.41,2.30,4.61,4.98,3.24,4.58,2.81,7.56],
+  repRev:[0,0.22,0.30,0.30,0.42,0.42,1.21,0.90,0.83,1.19,0.60,3.63],
+  repPct:[0,2.6,7.8,8.5,11.0,15.5,20.8,15.4,20.3,20.6,17.6,32.4],
+  kolBiz:[{biz:'學習商品',rev:15.34,clr:'#A8C5DA'},{biz:'Mirafeel',rev:0.51,clr:'#F5D4A0'},{biz:'周邊商品',rev:0.41,clr:'#A8D5B5'}]
+};
+
+function buildT7(){
+  const p=el('t7');
+  const ins_ja=`<p><strong>発見①：舞台劇来場12,200家族のBCL転換6.8%。</strong>93%を取り逃がし。転換率30%改善で年間+3,660人・+2.7M NTD試算。最コスト効率の高いBCL獲得接点。</p>
+<p><strong>発見②：LINE綁定ありリピート率は全管道で約2倍。</strong>WEB×綁定あり24.3% vs 綁定なし12.3%。ただし綁定だけでは不十分で購買後の良質COMが本質。</p>
+<p><strong>発見③：2回目購買の46%は購買後3ヶ月以内。</strong>TMフォロー黄金ウィンドウは購買後30〜60日。現在このウィンドウが明示的に設計されていない。</p>
+<p><strong>発見④：TM高LTVの正体は「1回の接触で複数商品を同時提案」。</strong>学習商品購買者の2回目は周辺商品1,339件。LC8Tに購買直後クロスセル自動配信を設計すればWEB/KOL購買者にも同効果を再現できる。</p>
+<p><strong>発見⑤：MirafeelはP&G制約消滅で初めてBCL提案が可能。</strong>2ヶ月サイクルで自然リピート。LC8T LINE 60日自動配信でTMコスト不要。学習商品購買者7,114人へのMirafeel提案は+1.4M NTD潜在。</p>
+<p><strong>発見⑥：KOLは学習商品専用チャネル（94%集中）。</strong>周辺商品・MirafeelのKOL活用はほぼゼロ。KOLへの商品提案拡張に余地あり。</p>`;
+  const ins_zh=`<p><strong>發現①：舞台劇12,200家庭BCL轉換率6.8%。</strong>93%被錯失。轉換率提升至30%可每年增加3,660名BCL、+2.7M NTD。</p>
+<p><strong>發現②：LINE已綁定回購率在所有管道均約為未綁定的2倍。</strong>WEB×已綁定24.3% vs 未綁定12.3%。關鍵是購買後高質量COM，非僅綁定本身。</p>
+<p><strong>發現③：46%的第二次購買在購買後3個月內發生。</strong>TM跟進黃金窗口為購買後30〜60天，目前尚未有明確設計。</p>
+<p><strong>發現④：TM高LTV的本質是「一通電話同時推薦多項商品」。</strong>在LC8T設計購買後立即交叉銷售自動推播，可對WEB/KOL購買者複製TM效果。</p>
+<p><strong>發現⑤：Mirafeel因P&G限制解除首次可向BCL提案。</strong>自然2個月再購週期，LC8T LINE 60天自動提醒可免TM成本。對7,114位學習商品客戶提案潛在+1.4M NTD。</p>
+<p><strong>發現⑥：KOL是學習商品專屬管道（94%集中）。</strong>周邊商品、Mirafeel的KOL活用幾乎為零，擴展提案有空間。</p>`;
+
+  const bclLbls=t('t7_bcl_lbl');
+  const bclData=[
+    {n:20350,pct:100,clr:'#9ca3af'},
+    {n:8140,pct:40,clr:'#4A7A9B'},
+    {n:828,pct:4.1,clr:'#1d7a5f'},
+    {n:12210,pct:60,clr:'#E8A598'}
+  ];
+
+  p.innerHTML=`
+  <div class="kpi-strip">
+    ${kpiCard(t('t7_kpi1'),'6.8%',t('t7_kpi1s'),'neg')}
+    ${kpiCard(t('t7_kpi2'),'24.3%',t('t7_kpi2s'),'pos')}
+    ${kpiCard(t('t7_kpi3'),t('t7_kpi3v'),t('t7_kpi3s'),'neutral')}
+    ${kpiCard(t('t7_kpi4'),'3,501人','WEB/KOL×綁定あり','neg')}
+    ${kpiCard(t('t7_kpi5'),'+5.1M',t('t7_kpi5s'),'pos')}
+  </div>
+  <div class="grid2">
+    <div class="cw"><div class="ct">${t('t7_c1')}</div><div style="height:230px"><canvas id="cvs-t7-ch" role="img" aria-label="管道×LINE綁定 リピート率：WEB×綁定あり24.3% TM×綁定あり22.2% KOL×綁定あり20.1%">WEB×綁定あり24.3% / WEB×未綁定12.3% / TM×綁定あり22.2% / KOL×綁定あり20.1%</canvas></div><div class="cn">${t('t7_cn1')}</div></div>
+    <div class="cw"><div class="ct">${t('t7_c2')}</div><div style="height:230px"><canvas id="cvs-t7-gap" role="img" aria-label="2回目購買タイミング：1ヶ月後353人 2ヶ月後237人 3ヶ月後193人 累計3ヶ月で46%">1ヶ月後353人(20.8%) / 2ヶ月後237人(14.0%) / 3ヶ月後193人(11.4%) / 累計3ヶ月46.1%</canvas></div><div class="cn">${t('t7_cn2')}</div></div>
+  </div>
+  <div class="grid2">
+    <div class="cw"><div class="ct">${t('t7_c3')}</div><div style="height:200px"><canvas id="cvs-t7-biz" role="img" aria-label="初回購買事業別リピート率：Mirafeel41.5% 周辺商品24.9% 学習商品12.6%">Mirafeel(紙おむつ)41.5% / 周辺商品24.9% / 学習商品12.6%</canvas></div><div class="cn">${t('t7_cn3')}</div></div>
+    <div class="cw"><div class="ct">${t('t7_c4')}</div><div style="height:200px"><canvas id="cvs-t7-nr" role="img" aria-label="月次新規vsリピート売上：3月リピート率32.4%が最高">3月リピート率32.4%(最高) / 年間リピート率平均14% / 新規vs繰り返し構成推移</canvas></div><div class="cn">${t('t7_cn4')}</div></div>
+  </div>
+  <div class="grid2">
+    <div class="cw"><div class="ct">${t('t7_c5')}</div><div style="height:200px"><canvas id="cvs-t7-cross" role="img" aria-label="クロスセル構造：学習→周辺1339件 Mirafeel→学習237件">学習→周辺商品1339件 / 学習→Mirafeel153件 / Mirafeel→学習237件 / Mirafeel→周辺189件</canvas></div><div class="cn">${t('t7_cn5')}</div></div>
+    <div class="cw"><div class="ct">${t('t7_c6')}</div><div style="height:200px"><canvas id="cvs-t7-kol" role="img" aria-label="KOL売上構成：学習商品15.34M(94%) Mirafeel0.51M(3%) 周辺商品0.41M(3%)">学習商品15.34M(94%) / Mirafeel0.51M(3%) / 周辺商品0.41M(3%)</canvas></div><div class="cn">${t('t7_cn6')}</div></div>
+  </div>
+  <div class="cw" style="border-color:#7EC8A0;background:#f7fcf9">
+    <div class="ct" style="color:var(--green)">${t('t7_c7')}</div>
+    <div style="margin-top:10px">
+      ${bclData.map((r,i)=>`<div class="funnel-row"><div class="funnel-lbl">${bclLbls[i]}</div><div class="funnel-bar" style="width:${Math.max(r.pct,5)}%;background:${r.clr}">${r.n.toLocaleString()}</div><div class="funnel-n">${r.pct}%</div></div>`).join('')}
+      <div style="margin-top:8px;padding:8px 12px;background:var(--red-bg);border-radius:4px;font-size:11px;color:var(--red)">⚠️ ${t('t7_bcl_warn')}</div>
+    </div>
+  </div>
+  <div class="cw" style="border-color:#C5B4E3;background:#faf8fe">
+    <div class="ct" style="color:#7A5AAB">${t('t7_c8')}</div>
+    <div class="tbl-wrap" style="margin-top:8px"><table><thead><tr>
+      <th>${t('t7_pri')}</th><th>${t('t7_seg')}</th>
+      <th class="r">${t('t7_scale')}</th><th class="r">${t('t7_rrate')}</th>
+      <th class="r">${t('t7_pot')}</th><th>${t('t7_act')}</th>
+    </tr></thead><tbody>
+      <tr style="background:#edf5f2"><td><span style="color:var(--red)">●</span> A</td><td>${t('t7_seg_a')}</td><td class="r">3,501人</td><td class="r pos">24.3%</td><td class="r pos">+2.9M</td><td style="font-size:11px">${t('t7_act_a')}</td></tr>
+      <tr><td><span style="color:var(--amber)">●</span> B</td><td>${t('t7_seg_b')}</td><td class="r">427人</td><td class="r pos">41.5%</td><td class="r pos">+0.7M</td><td style="font-size:11px">${t('t7_act_b')}</td></tr>
+      <tr><td><span style="color:var(--amber)">●</span> C</td><td>${t('t7_seg_c')}</td><td class="r">7,114人</td><td class="r">—</td><td class="r pos">+1.4M</td><td style="font-size:11px">${t('t7_act_c')}</td></tr>
+      <tr><td><span style="color:var(--green)">●</span> D</td><td>${t('t7_seg_d')}</td><td class="r">5,705人</td><td class="r">12.3%</td><td class="r pos">+3.2M</td><td style="font-size:11px">${t('t7_act_d')}</td></tr>
+    </tbody></table></div>
+  </div>
+  <div class="ins"><div class="ins-h" onclick="toggleIns(this)"><span>▶ ${t('insight')}</span><span style="font-size:10px;color:var(--text3)">${t('open_hint')}</span></div><div class="ins-b">${LANG==='ja'?ins_ja:ins_zh}</div></div>`;
+}
+
+function initT7(){
+  const chClrs=D7.chRates.map(r=>r>18?'#A8C5DA':'#D4C5B0');
+  mkChart('cvs-t7-ch',{type:'bar',data:{labels:D7.chLbls,datasets:[{data:D7.chRates,backgroundColor:chClrs,borderWidth:0}]},
+    options:{...baseOpts,indexAxis:'y',scales:{
+      x:{grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10},callback:v=>v+'%'},max:30},
+      y:{grid:{display:false},ticks:{color:'#1a1916',font:{size:10.5}}}
+    },plugins:{...baseOpts.plugins,tooltip:{callbacks:{label:ctx=>ctx.raw+'%'}}}},
+    plugins:[{id:'chL',afterDatasetsDraw(chart){chart.data.datasets.forEach((ds,di)=>{chart.getDatasetMeta(di).data.forEach((bar,i)=>{const ctx=chart.ctx;ctx.save();ctx.fillStyle=D7.chRates[i]>18?'#1d7a5f':'#6b6860';ctx.font='bold 10px SF Mono,Consolas,monospace';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(D7.chRates[i]+'%',bar.x+4,bar.y);ctx.restore();});});}}]
+  });
+  const gapClrs=D7.repeatGapM.map((_,i)=>i<3?'#E8A598':'#D4C5B0');
+  mkChart('cvs-t7-gap',{type:'bar',data:{labels:D7.repeatGapM.map(m=>m+'M'),datasets:[{data:D7.repeatGapC,backgroundColor:gapClrs,borderWidth:0}]},
+    options:{...baseOpts,scales:{x:{grid:{display:false},ticks:{color:'#9c9a94',font:{size:10}}},y:{grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10}}}},plugins:{...baseOpts.plugins,tooltip:{callbacks:{label:ctx=>`${ctx.raw}人（累計${D7.repeatGapCum[ctx.dataIndex]}%）`}}}},
+    plugins:[valLbl('#B05040','9px')]});
+  mkChart('cvs-t7-biz',{type:'bar',data:{labels:t('t7_biz_lbl'),datasets:[{data:[41.5,24.9,12.6],backgroundColor:['#F5D4A0','#A8D5B5','#A8C5DA'],borderWidth:0}]},
+    options:{...baseOpts,scales:{x:{grid:{display:false},ticks:{color:'#1a1916',font:{size:10.5}}},y:{grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10},callback:v=>v+'%'},max:50}}},
+    plugins:[valLbl('#1a1916','10px',v=>v.toFixed(1)+'%')]});
+  mkChart('cvs-t7-nr',{type:'bar',data:{labels:D7.months12,datasets:[
+    {label:t('t7_new'),data:D7.newRev,backgroundColor:'#A8C5DA',stack:'s'},
+    {label:t('t7_rep'),data:D7.repRev,backgroundColor:'#E8A598',stack:'s'}
+  ]},options:{...baseOpts,scales:{
+    x:{stacked:true,grid:{display:false},ticks:{color:'#9c9a94',font:{size:9}}},
+    y:{stacked:true,grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10},callback:v=>v+'M'}}
+  },plugins:{...baseOpts.plugins,legend:{display:true,position:'top',labels:{font:{size:10},padding:8,boxWidth:10,color:'#6b6860'}},tooltip:{callbacks:{footer:items=>`${t('t7_reprate')}: ${D7.repPct[items[0].dataIndex]}%`}}}}});
+  mkChart('cvs-t7-cross',{type:'bar',data:{labels:t('t7_cross_lbl'),datasets:[{data:[1339,153,237,189],backgroundColor:['#A8D5B5','#F5D4A0','#A8C5DA','#A8D5B5'],borderWidth:0}]},
+    options:{...baseOpts,indexAxis:'y',scales:{x:{grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10}}},y:{grid:{display:false},ticks:{color:'#1a1916',font:{size:10.5}}}}},
+    plugins:[{id:'crossLbl',afterDatasetsDraw(chart){chart.data.datasets.forEach((ds,di)=>{chart.getDatasetMeta(di).data.forEach((bar,i)=>{const v=ds.data[i];if(!v)return;const ctx=chart.ctx;ctx.save();ctx.fillStyle='#1a1916';ctx.font='10px SF Mono,Consolas,monospace';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(v+'件',bar.x+4,bar.y);ctx.restore();});});}}]});
+  mkChart('cvs-t7-kol',{type:'doughnut',data:{labels:t('t7_kol_lbl'),datasets:[{data:[15.34,0.51,0.41],backgroundColor:['#A8C5DA','#F5D4A0','#A8D5B5'],borderWidth:1,borderColor:'#fff'}]},
+    options:{...baseOpts,plugins:{legend:{display:true,position:'right',labels:{font:{size:11},padding:10,boxWidth:12,color:'#6b6860'}},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw}M (${(ctx.raw/16.26*100).toFixed(0)}%)`}}}}});
+}
+
+const TOPPRODS={
+gk:[
+  {n:'好情緒EQ×品格人際',n_zh:'好情緒EQ×品格人際套組',r:9212,q:4407,p:2090,c:{TM:37,WEB:29,KOL:24,EC:9,經銷商:1},m:[0,2770,1300,1049,995,81,676,573,435,492,284,552]},
+  {n:'生活好習慣套組',n_zh:'寶寶生活好習慣學習套組',r:8224,q:2007,p:4098,c:{KOL:29,WEB:24,TM:23,その他:14,EC:9,經銷商:1},m:[826,2476,686,362,512,454,511,671,368,483,381,487]},
+  {n:'英語Plus套組',n_zh:'和巧虎一起說英語Plus',r:7855,q:1724,p:4556,c:{TM:39,WEB:27,KOL:24,EC:7,經銷商:3},m:[644,1298,489,585,769,598,671,859,484,425,339,690]},
+  {n:'語彙・智育套組',n_zh:'語彙表達‧智育學習套組',r:7150,q:1532,p:4667,c:{WEB:33,TM:31,KOL:30,EC:5},m:[0,0,0,0,0,0,1768,1698,821,1292,532,1036]},
+  {n:'注音套組2.0',n_zh:'注音套組2.0',r:6401,q:2100,p:3048,c:{TM:42,その他:21,WEB:18,KOL:10,EC:9},m:[484,1712,475,384,374,387,597,396,377,435,243,530]},
+  {n:'點讀巧比思考力組',n_zh:'點讀巧比思考力遊戲組',r:5135,q:2693,p:1907,c:{TM:29,WEB:29,KOL:22,EC:20},m:[590,993,542,413,448,470,449,700,496,13,15,0]},
+  {n:'雙語點讀圖鑑',n_zh:'巧虎雙語點讀圖鑑',r:4349,q:1918,p:2268,c:{WEB:35,KOL:32,TM:17,EC:16},m:[0,0,0,0,0,0,0,0,0,1703,1358,1287]},
+  {n:'英語進階版',n_zh:'和巧虎一起說英語進階版',r:3445,q:807,p:4268,c:{TM:57,WEB:17,KOL:16,EC:5,經銷商:4},m:[308,445,214,227,340,248,287,274,338,244,202,312]},
+  {n:'數學套組',n_zh:'和巧虎一起學數學套組',r:3408,q:1118,p:3048,c:{KOL:44,WEB:27,TM:24,EC:4},m:[0,0,0,0,0,0,0,0,0,0,0,3407]},
+  {n:'點讀大冒険套組',n_zh:'聰明左右腦點讀大冒險',r:2236,q:783,p:2856,c:{WEB:36,KOL:32,TM:27,EC:5},m:[0,0,0,0,0,0,0,0,0,0,0,2236]}
+],
+hb:[
+  {n:'活力車編程遊戲組',r:1214,q:797,p:1523,c:{その他:39,TM:32,WEB:11,EC:10,KOL:8}},
+  {n:'琪琪穿衣練習組',r:1103,q:586,p:1883,c:{舞台劇:57,WEB:30,TM:6,EC:4,授權:3}},
+  {n:'拖把小精靈套組',r:1023,q:1155,p:885,c:{EC:28,WEB:27,授權:14,その他:13,TM:10,KOL:9}},
+  {n:'聲光廚房遊戲組',r:886,q:681,p:1301,c:{舞台劇:64,授權:20,WEB:14,TM:2}},
+  {n:'春季繪本 魔法音樂響叮噹',r:805,q:3384,p:238,c:{舞台劇:100}},
+  {n:'神奇果汁店(感溫變色)',r:800,q:951,p:841,c:{舞台劇:51,WEB:27,TM:16,授權:6}},
+  {n:'手偶互動遊戲組',r:783,q:2245,p:349,c:{EC:34,WEB:33,舞台劇:21,KOL:4,その他:4,TM:3}},
+  {n:'夏季繪本 精靈的魔法夢境',r:772,q:3253,p:237,c:{舞台劇:100}},
+  {n:'百變工具箱',r:747,q:893,p:836,c:{舞台劇:74,WEB:18,授權:7}},
+  {n:'可愛好朋友玩偶組',r:695,q:528,p:1316,c:{舞台劇:80,WEB:8,EC:8,授權:5}},
+  {n:'轉吧！扭蛋機',r:618,q:1198,p:516,c:{舞台劇:78,WEB:15,授權:6}},
+  {n:'巧虎包',r:530,q:718,p:738,c:{舞台劇:78,授權:12,WEB:6,EC:4}},
+  {n:'方塊活字印刷遊戲組',r:465,q:454,p:1024,c:{舞台劇:64,WEB:17,TM:16,授權:3}},
+  {n:'專心吃飯音樂立體書',r:418,q:636,p:658,c:{EC:41,WEB:24,TM:18,KOL:12,授權:5}},
+  {n:'好朋友度假小屋森林系',r:411,q:227,p:1812,c:{WEB:54,舞台劇:25,授權:20}},
+  {n:'琪琪包',r:407,q:548,p:743,c:{舞台劇:87,授權:8,EC:4}},
+  {n:'巧虎抱抱玩偶',r:397,q:483,p:823,c:{舞台劇:53,WEB:30,授權:16}},
+  {n:'小花吊飾玩偶',r:372,q:1129,p:330,c:{舞台劇:60,授權:32,WEB:9}},
+  {n:'巧虎吊飾玩偶',r:371,q:1198,p:310,c:{舞台劇:50,授權:40,WEB:9}},
+  {n:'小花抱抱',r:310,q:375,p:826,c:{舞台劇:59,WEB:26,授權:15}}
+],
+mr:[
+  {n:'整箱L',r:706,q:391,p:1805,c:{WEB:50,KOL:27,TM:23}},
+  {n:'整箱XL',r:705,q:296,p:2380,c:{WEB:55,TM:26,KOL:20}},
+  {n:'整箱XXL',r:400,q:176,p:2273,c:{WEB:57,TM:35,KOL:8}},
+  {n:'整箱M',r:310,q:163,p:1904,c:{WEB:64,KOL:26,TM:10}},
+  {n:'單包L',r:92,q:164,p:564,c:{WEB:66,TM:25,KOL:9}},
+  {n:'單包XL',r:65,q:116,p:561,c:{WEB:71,TM:24,KOL:5}},
+  {n:'單包M',r:58,q:102,p:570,c:{WEB:74,KOL:21,TM:5}},
+  {n:'半包L',r:50,q:168,p:298,c:{WEB:94,KOL:6}},
+  {n:'整箱S',r:44,q:25,p:1776,c:{WEB:59,TM:23,KOL:18}},
+  {n:'單包XXL',r:40,q:71,p:563,c:{WEB:66,TM:22,KOL:11}},
+  {n:'半包M',r:21,q:64,p:333,c:{WEB:88,KOL:12}},
+  {n:'單包S',r:13,q:22,p:580,c:{WEB:82,KOL:18}},
+  {n:'試用包XXL',r:4,q:147,p:29,c:{WEB:100}},
+  {n:'試用包L',r:4,q:140,p:29,c:{WEB:100}},
+  {n:'試用包XL',r:3,q:111,p:29,c:{WEB:100}},
+  {n:'試用包M',r:2,q:65,p:28,c:{WEB:100}},
+  {n:'試用包S',r:1,q:43,p:29,c:{WEB:100}},
+  {n:'半包S',r:0,q:1,p:333,c:{WEB:100}}
+]};
+
+function mkSpk(m,clr){
+  const w=72,h=22,n=m.length,max=Math.max(...m,1);
+  const pts=m.map((v,i)=>(i*(w/(n-1))).toFixed(1)+','+(h-v/max*(h-2)-1).toFixed(1)).join(' ');
+  return '<svg width="'+w+'" height="'+h+'" style="vertical-align:middle"><polyline points="'+pts+'" fill="none" stroke="'+clr+'" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+}
+const CH_CLR={TM:'#E8A598',WEB:'#A8C5DA',KOL:'#C5B4E3',EC:'#A8D5B5',舞台劇:'#F5D4A0',授權:'#D4C5B0',經銷商:'#C8C8C8',その他:'#f0cca0'};
+function chBar(chObj){
+  return '<div style="display:flex;height:8px;border-radius:2px;overflow:hidden;min-width:80px">'+Object.entries(chObj).map(([k,v])=>'<div style="width:'+v+'%;background:'+(CH_CLR[k]||'#ccc')+'" title="'+k+' '+v+'%"></div>').join('')+'</div>'+'<div style="font-size:9px;color:var(--text3);margin-top:2px">'+Object.entries(chObj).map(([k,v])=>'<span style="color:'+(CH_CLR[k]||'#aaa')+'">'+k+' '+v+'%</span>').join(' ')+'</div>';
+}
+function prodTable(prods,clr){
+  const isJa=LANG==='ja';
+  const h=isJa?['#','商品名','売上(NTD)','数量','平均単価','管道別構成','月次推移']:['#','商品名','銷售額(NTD)','數量','平均單價','管道別構成','月次趨勢'];
+  let s='<div class="tbl-wrap"><table><thead><tr>'+h.map((c,i)=>'<th'+(i>=2?' class="r"':'')+(i===6?' style="text-align:center"':'')+'>'+c+'</th>').join('')+'</tr></thead><tbody>';
+  prods.forEach((p,i)=>{
+    const nm=isJa?p.n:(p.n_zh||p.n);
+    s+='<tr>';
+    s+='<td style="color:var(--text3);font-size:11px">'+(i+1)+'</td>';
+    s+='<td style="font-size:12px;max-width:160px">'+nm+'</td>';
+    s+='<td class="r pos">'+(p.r/1000).toFixed(2)+'M</td>';
+    s+='<td class="r">'+p.q.toLocaleString()+'</td>';
+    s+='<td class="r">'+p.p.toLocaleString()+'</td>';
+    s+='<td style="min-width:120px">'+chBar(p.c)+'</td>';
+    s+='<td style="text-align:center">'+(p.m?mkSpk(p.m,clr):'—')+'</td>';
+    s+='</tr>';
+  });
+  s+='</tbody></table></div>';
+  return s;
+}
+function buildT8(){
+  const p=el('t8');
+  const isJa=LANG==='ja';
+  const gkRev=TOPPRODS.gk.reduce((a,v)=>a+v.r,0);
+  const hbRev=TOPPRODS.hb.reduce((a,v)=>a+v.r,0);
+  const mrRev=TOPPRODS.mr.reduce((a,v)=>a+v.r,0);
+  const ins8_ja='<p><strong>学習商品：TOP10で総収入の95%超。</strong>好情緒EQ（発売5ヶ月で首位・9.2M）と語彙・智育（FY25後半のみで7.2M）の新商品2本が事業を牽引。数學套組・點讀大冒険は26/03のみで合計5.6M達成 → FY26の主力候補。英語進階版のTM依存（57%）は管道分散の余地あり。</p><p><strong>周辺商品：舞台劇管道が多数商品の主要販路。</strong>玩具系上位商品の5〜8割が舞台劇経由。舞台劇の規模縮小は周辺商品収益に直接波及する。繪本2種は高数量・低単価で収益貢献は限定的。</p><p><strong>Mirafeel：整箱（箱売り）L・XLが56%を占める主力SKU。</strong>試用包は単価29円・WEBのみのサンプル配布的商品。P&G制約消滅後、BCL向けTM提案が可能になった今がLTV化の好機。</p>';
+  const ins8_zh='<p><strong>學習商品：TOP10占總收入95%以上。</strong>好情緒EQ（發售5個月即登頂・9.2M）與語彙智育套組（FY25下半年僅6個月達7.2M）兩款新品引領業績。數學套組・點讀大冒險僅3月單月合計5.6M → FY26主力候選。英語進階版TM依賴度57%，管道分散仍有空間。</p><p><strong>周邊商品：舞台劇管道是多數商品的主要銷售管道。</strong>玩具類前幾名商品有50〜80%透過舞台劇管道銷售，舞台劇規模直接影響周邊商品收益。繪本2種為高量低價，收益貢獻有限。</p><p><strong>Mirafeel：整箱L・XL合占56%，為主力SKU。</strong>試用包單價29元，全由WEB銷售，近似免費試用品。P&G限制解除後，對BCL的TM提案首次可行，現在正是提升LTV的時機。</p>';
+
+  p.innerHTML=`
+  <div class="kpi-strip">
+    ${kpiCard(isJa?'学習商品 TOP10':'學習商品 TOP10',(gkRev/1000).toFixed(1)+'M',isJa?'58.5M NTD 総収入の99%':'58.5M NTD 總收入的99%','neutral')}
+    ${kpiCard(isJa?'周辺商品 TOP20':'周邊商品 TOP20',(hbRev/1000).toFixed(1)+'M',isJa?'20.8M NTD 総収入の63%':'20.8M NTD 總收入的63%','neutral')}
+    ${kpiCard('Mirafeel 全商品',(mrRev/1000).toFixed(2)+'M',isJa?'2.5M NTD 全18SKU':'2.5M NTD 全18SKU','neutral')}
+  </div>
+  <div class="sbar">
+    <button class="sb on" data-g="s8" data-sid="s8a" onclick="showSub('s8','s8a')">${isJa?'学習商品 TOP10':'學習商品 TOP10'}</button>
+    <button class="sb" data-g="s8" data-sid="s8b" onclick="showSub('s8','s8b')">${isJa?'周辺商品 TOP20':'周邊商品 TOP20'}</button>
+    <button class="sb" data-g="s8" data-sid="s8c" onclick="showSub('s8','s8c')">Mirafeel 全商品</button>
+  </div>
+  <div class="cn" style="margin-bottom:10px;padding:6px 10px;background:var(--bg2);border-radius:4px">${isJa?'管道色: <span style="color:#E8A598">■TM</span> <span style="color:#A8C5DA">■WEB</span> <span style="color:#C5B4E3">■KOL</span> <span style="color:#A8D5B5">■EC</span> <span style="color:#F5D4A0">■舞台劇</span> <span style="color:#D4C5B0">■授權</span> <span style="color:#f0cca0">■その他</span>':'管道色: <span style="color:#E8A598">■TM</span> <span style="color:#A8C5DA">■WEB</span> <span style="color:#C5B4E3">■KOL</span> <span style="color:#A8D5B5">■EC</span> <span style="color:#F5D4A0">■舞台劇</span> <span style="color:#D4C5B0">■授權</span> <span style="color:#f0cca0">■其他</span>'}</div>
+  <div id="s8a" class="sp on" data-g="s8">${prodTable(TOPPRODS.gk,'#4A7A9B')}</div>
+  <div id="s8b" class="sp" data-g="s8">${prodTable(TOPPRODS.hb,'#3A8A55')}</div>
+  <div id="s8c" class="sp" data-g="s8">${prodTable(TOPPRODS.mr,'#C07820')}</div>
+  <div class="ins"><div class="ins-h" onclick="toggleIns(this)"><span>▶ ${t('insight')}</span><span style="font-size:10px;color:var(--text3)">${t('open_hint')}</span></div><div class="ins-b">${isJa?ins8_ja:ins8_zh}</div></div>`;
+}
+
+function buildT9(){
+  const p=el('t9');
+  const isJa=LANG==='ja';
+  const bd=D.buyer;
+
+  const segCols=t('t9_seg_cols');
+  const segClrs={HIGH:'#B5EAD7',MID:'#FFF4A3',LOW:'#F5C5B5'};
+  let segTbl=`<div class="tbl-wrap"><table><thead><tr>${segCols.map((c,i)=>`<th${i>1?' class="r"':''}>${c}</th>`).join('')}</tr></thead><tbody>`;
+  bd.seg.forEach((s,i)=>{
+    const lbl=t('t9_seg_lbl')[i];
+    segTbl+=`<tr style="background:${segClrs[s.id]}22">
+      <td><span style="background:${segClrs[s.id]};border-radius:4px;padding:2px 8px;font-weight:600;font-size:11px">${lbl}</span></td>
+      <td class="r">${s.cnt.toLocaleString()}</td>
+      <td class="r" style="font-family:var(--mono);font-weight:600">${s.avgLtv.toLocaleString()}</td>
+      <td class="r">${s.bindRate}%</td>
+      <td class="r">${s.repeatRate}%</td>
+      <td class="r">${s.crossRate}%</td>
+      <td class="r">${s.tmRate}%</td>
+    </tr>`;
+  });
+  segTbl+=`</tbody></table></div>`;
+
+  const chCols=t('t9_ch_cols');
+  const chClr={TM:'#E8A598',KOL:'#C5B4E3',WEB:'#A8C5DA'};
+  let chTbl=`<div class="tbl-wrap"><table><thead><tr>${chCols.map((c,i)=>`<th${i>1?' class="r"':''}>${c}</th>`).join('')}</tr></thead><tbody>`;
+  bd.chSeg.forEach(s=>{
+    const bindBadge=s.bind==='y'
+      ?`<span style="background:#B5EAD7;border-radius:3px;padding:1px 5px;font-size:9.5px">${isJa?'綁定あり':'已綁定'}</span>`
+      :`<span style="background:#F5C5B5;border-radius:3px;padding:1px 5px;font-size:9.5px">${isJa?'綁定なし':'未綁定'}</span>`;
+    const isTop=s.share>15;
+    chTbl+=`<tr${isTop?' style="background:var(--green-bg)"':''}>
+      <td><span style="background:${chClr[s.ch]};border-radius:3px;padding:2px 8px;font-weight:600;font-size:11px">${s.ch}</span></td>
+      <td>${bindBadge}</td>
+      <td class="r">${s.cnt.toLocaleString()}</td>
+      <td class="r" style="font-family:var(--mono)">${s.avgLtv.toLocaleString()}</td>
+      <td class="r">${s.repeat}%</td>
+      <td class="r">${(s.rev/1e6).toFixed(1)}M</td>
+      <td class="r ${isTop?'pos':''}" style="font-weight:${isTop?'600':'400'}">${s.share}%</td>
+    </tr>`;
+  });
+  chTbl+=`</tbody></table></div>`;
+
+  const fqHds=isJa?['購買回数','綁定なし 顧客数','綁定なし LTV','綁定あり 顧客数','綁定あり LTV']:
+                   ['購買次數','未綁定 客戶數','未綁定 LTV','已綁定 客戶數','已綁定 LTV'];
+  let fqTbl=`<div class="tbl-wrap"><table><thead><tr>${fqHds.map((c,i)=>`<th${i>0?' class="r"':''}>${c}</th>`).join('')}</tr></thead><tbody>`;
+  bd.freqBind.forEach(r=>{
+    fqTbl+=`<tr>
+      <td style="font-weight:600">${r.tx}</td>
+      <td class="r">${r.n.toLocaleString()}</td>
+      <td class="r" style="font-family:var(--mono)">${r.ltv_n.toLocaleString()}</td>
+      <td class="r">${r.y.toLocaleString()}</td>
+      <td class="r pos" style="font-family:var(--mono);font-weight:600">${r.ltv_y.toLocaleString()}</td>
+    </tr>`;
+  });
+  fqTbl+=`</tbody></table></div>`;
+
+  const fbHds=isJa?['初回購買月','顧客数','平均LTV','リピート率']:['首購月','客戶數','平均LTV','回購率'];
+  let fbTbl=`<div class="tbl-wrap"><table><thead><tr>${fbHds.map((c,i)=>`<th${i>0?' class="r"':''}>${c}</th>`).join('')}</tr></thead><tbody>`;
+  bd.firstBuy.forEach(r=>{
+    const isHigh=r.repeat>=25;
+    fbTbl+=`<tr${isHigh?' style="background:var(--green-bg)"':''}>
+      <td style="font-family:var(--mono)">${r.m}</td>
+      <td class="r">${r.cnt.toLocaleString()}</td>
+      <td class="r" style="font-family:var(--mono)">${r.ltv.toLocaleString()}</td>
+      <td class="r ${isHigh?'pos':''}" style="font-weight:${isHigh?'600':'400'}">${r.repeat}%</td>
+    </tr>`;
+  });
+  fbTbl+=`</tbody></table></div>`;
+
+  p.innerHTML=`
+  <div class="kpi-strip">
+    ${kpiCard(t('t9_kpi_high'),'2,533',isJa?'人・平均LTV 11,633 NTD':'人・平均LTV 11,633 NTD','pos')}
+    ${kpiCard(t('t9_kpi_cross'),'24.6%',isJa?'複数事業購買（3,110人）':'複數事業購買（3,110人）','pos')}
+    ${kpiCard(t('t9_kpi_tm_bind'),'34.0%',isJa?'TM×綁定（3,580人）':'TM×綁定（3,580人）','pos')}
+    ${kpiCard(t('t9_kpi_multi_ltv'),'7,557 NTD',isJa?'単一事業4,006 NTDの1.9倍':'單一事業4,006 NTD的1.9倍','pos')}
+    ${kpiCard(isJa?'6回以上×綁定あり LTV':'6次以上×已綁定 LTV','30,942 NTD',isJa?'平均LTVの6.3倍':'平均LTV的6.3倍','pos')}
+  </div>
+
+  <div class="cw"><div class="ct" data-k="t9_seg"></div>
+    ${segTbl}
+    <div class="cn" data-k="t9_seg_n" style="margin-top:6px"></div>
+  </div>
+
+  <div class="cw"><div class="ct" data-k="t9_biz_pat"></div>
+    <div style="height:260px"><canvas id="cvs-t9-biz" role="img" aria-label="事業購買模式 客戶數・平均LTV"></canvas></div>
+    <div class="cn" data-k="t9_biz_pat_n" style="margin-top:6px"></div>
+  </div>
+
+  <div class="cw"><div class="ct" data-k="t9_ch_seg"></div>
+    <div style="height:240px"><canvas id="cvs-t9-ch" role="img" aria-label="管道×綁定 6區段銷售佔比"></canvas></div>
+    <div style="margin-top:10px">${chTbl}</div>
+    <div class="cn" data-k="t9_ch_seg_n" style="margin-top:6px"></div>
+  </div>
+
+  <div class="cw"><div class="ct" data-k="t9_freq_bind"></div>
+    <div style="height:220px"><canvas id="cvs-t9-freq" role="img" aria-label="購買回数×綁定 LTV比較"></canvas></div>
+    ${fqTbl}
+    <div class="cn" data-k="t9_freq_bind_n" style="margin-top:6px"></div>
+  </div>
+
+  <div class="ins" style="margin-bottom:8px">
+    <div class="ins-h" onclick="toggleIns(this)" style="background:var(--bg3)">
+      <span>▶ <span data-k="t9_bind_timing"></span></span>
+      <span style="font-size:10px;color:var(--text3)" data-k="open_hint"></span>
+    </div>
+    <div class="ins-b" style="padding:10px">
+      <div style="height:180px"><canvas id="cvs-t9-timing" role="img" aria-label="LINE綁定時機"></canvas></div>
+      <div class="cn" data-k="t9_bind_timing_n" style="margin-top:6px"></div>
+    </div>
+  </div>
+
+  <div class="ins" style="margin-bottom:8px">
+    <div class="ins-h" onclick="toggleIns(this)" style="background:var(--bg3)">
+      <span>▶ <span data-k="t9_first_buy"></span></span>
+      <span style="font-size:10px;color:var(--text3)" data-k="open_hint"></span>
+    </div>
+    <div class="ins-b" style="padding:10px">
+      ${fbTbl}
+      <div class="cn" data-k="t9_first_buy_n" style="margin-top:6px"></div>
+    </div>
+  </div>
+
+  <div class="ins"><div class="ins-h" onclick="toggleIns(this)"><span>▶ ${t('insight')}</span><span style="font-size:10px;color:var(--text3)">${t('open_hint')}</span></div><div class="ins-b">
+    <p><strong>${isJa?'HIGH顧客2,533人が事業を支えている。':'HIGH客戶2,533人撐起整個業績。'}</strong>${isJa?'上位20%のHIGH顧客（LTV 7,099 NTD以上）は平均LTV 11,633 NTDで全売上の48%を担う。特徴はリピート率55%・クロスセル率49%・TM経由39%。LOW顧客（LTV 3,218 NTD以下）はリピート3%・クロスセル10%と全く異なる顧客像。同じ「購入者」でも施策設計は別であるべき。':'上位20% HIGH客戶（LTV 7,099 NTD以上）平均LTV 11,633 NTD，貢獻全體48%銷售額。特徵：回購率55%・交叉銷售率49%・TM管道39%。LOW客戶（LTV 3,218 NTD以下）回購3%・交叉銷售10%，是截然不同的客群，施策設計應分開思考。'}</p>
+    <p><strong>${isJa?'クロスセルがLTVの最大ドライバー。':'交叉銷售是LTV最大驅動力。'}</strong>${isJa?'単一事業購買（75.4%・9,531人）の平均LTV 4,006 NTDに対し、複数事業購買（24.6%・3,110人）は7,557 NTDと1.9倍。特に學習+周邊の組み合わせ2,746人が19.7M NTDと最大収益源。學習商品購入者7,093人のうち周邊商品にクロスした人は2,869人（40%）。残り60%の4,224人が未クロスセルの最大ターゲット。':'單一事業購買（75.4%・9,531人）平均LTV 4,006 NTD，複數事業購買（24.6%・3,110人）則達7,557 NTD，為1.9倍。學習+周邊組合2,746人貢獻19.7M NTD，為最大收益來源。學習商品購買者7,093人中，已交叉購買周邊者2,869人（40%），尚未交叉的4,224人是最大目標群體。'}</p>
+    <p><strong>${isJa?'TM×綁定ありが構造的に最強のセグメント。':'TM×已綁定是結構性最強的區段。'}</strong>${isJa?'3,580人・21.0M NTD（34%）を単独で担う。綁定率98%・リピート率23%。対してWEB×綁定なし（3,058人・16.2%）はリピート12%・平均LTV 3,259 NTDと対照的。LINE綁定者の63%は1年以上前に綁定した既存ファンであり、新規購買者を速やかにLINE綁定→TM接触に繋げることが長期LTV最大化の最短経路。':'3,580人・21.0M NTD（34%）單一區段最大。綁定率98%・回購率23%。相比之下WEB×未綁定（3,058人・16.2%）回購12%・平均LTV 3,259 NTD形成強烈對比。已綁定者的63%是1年以上前綁定的既有粉絲，將新購買者快速導入LINE綁定→TM接觸，是最大化長期LTV的最短路徑。'}</p>
+  </div></div>`;
+  applyI18n();
+}
+
+function initT9(){
+  const bd=D.buyer;
+  const isJa=LANG==='ja';
+  const baseOp={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}};
+
+  const patLbls=bd.bizPat.map(p=>p.pat);
+  mkChart('cvs-t9-biz',{type:'bar',
+    data:{labels:patLbls,datasets:[
+      {label:isJa?'平均LTV（NTD）':'平均LTV（NTD）',data:bd.bizPat.map(p=>p.avgLtv),backgroundColor:'#A8C5DA',yAxisID:'y',borderWidth:0,borderRadius:2},
+      {label:isJa?'顧客数（右軸）':'客戶數（右軸）',data:bd.bizPat.map(p=>p.cnt),backgroundColor:'rgba(197,180,227,0.5)',yAxisID:'y1',borderWidth:0,borderRadius:2}
+    ]},
+    options:{...baseOp,
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#1a1916',font:{size:10}}},
+        y:{grid:{color:'#e2dfd8'},ticks:{color:'#4A7A9B',font:{size:10},callback:v=>v.toLocaleString()},title:{display:true,text:'平均LTV (NTD)',color:'#4A7A9B',font:{size:9}}},
+        y1:{grid:{display:false},ticks:{color:'#7A5AAB',font:{size:10},callback:v=>v>=1000?(v/1000).toFixed(0)+'K':v},position:'right',title:{display:true,text:isJa?'顧客数':'客戶數',color:'#7A5AAB',font:{size:9}}}
+      },
+      plugins:{...baseOp.plugins,
+        legend:{display:true,position:'top',labels:{font:{size:10},padding:8,boxWidth:10,color:'#6b6860'}},
+        tooltip:{callbacks:{label:ctx=>ctx.datasetIndex===0?`平均LTV: ${ctx.raw.toLocaleString()} NTD`:`顧客数: ${ctx.raw.toLocaleString()}人`}}
+      }
+    }
+  });
+
+  const chLbls=bd.chSeg.map(s=>`${s.ch}×${s.bind==='y'?(isJa?'綁定あり':'已綁定'):(isJa?'綁定なし':'未綁定')}`);
+  const chRevs=bd.chSeg.map(s=>s.rev);
+  const chClrs=['#E8A598','#A8C5DA','#B5D5E8','#C5B4E3','#D4B4E3','#F5D4B0'];
+  mkChart('cvs-t9-ch',{type:'doughnut',
+    data:{labels:chLbls,datasets:[{data:chRevs,backgroundColor:chClrs,borderWidth:1,borderColor:'#fff'}]},
+    options:{...baseOp,plugins:{
+      legend:{display:true,position:'right',labels:{font:{size:10},color:'#6b6860',padding:5,boxWidth:10}},
+      tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${(ctx.raw/1e6).toFixed(1)}M (${bd.chSeg[ctx.dataIndex].share}%)`}}
+    }}
+  });
+
+  const fqLbls=bd.freqBind.map(r=>r.tx);
+  mkChart('cvs-t9-freq',{type:'bar',
+    data:{labels:fqLbls,datasets:[
+      {label:isJa?'綁定なし':'未綁定',data:bd.freqBind.map(r=>r.ltv_n),backgroundColor:'#D4C5B0',borderWidth:0,borderRadius:2},
+      {label:isJa?'綁定あり':'已綁定',data:bd.freqBind.map(r=>r.ltv_y),backgroundColor:'#A8C5DA',borderWidth:0,borderRadius:2}
+    ]},
+    options:{...baseOp,
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#1a1916',font:{size:11}}},
+        y:{grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10},callback:v=>v.toLocaleString()}}
+      },
+      plugins:{...baseOp.plugins,
+        legend:{display:true,position:'top',labels:{font:{size:10},padding:8,boxWidth:10,color:'#6b6860'}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.raw.toLocaleString()} NTD`}}
+      }
+    },
+    plugins:[{id:'fqLbl',afterDatasetsDraw(chart){
+      chart.data.datasets.forEach((ds,di)=>{
+        chart.getDatasetMeta(di).data.forEach((bar,i)=>{
+          const v=ds.data[i];
+          const ctx=chart.ctx;ctx.save();
+          ctx.fillStyle=di===0?'#8A7A60':'#2a5a8b';
+          ctx.font='8.5px SF Mono,Consolas,monospace';
+          ctx.textAlign='center';ctx.textBaseline='bottom';
+          ctx.fillText(v>=1000?(v/1000).toFixed(0)+'K':v,bar.x,bar.y-2);
+          ctx.restore();
+        });
+      });
+    }}]
+  });
+
+  const tmLbls=bd.bindTiming.map(r=>r.cat);
+  const tmVals=bd.bindTiming.map(r=>r.cnt);
+  mkChart('cvs-t9-timing',{type:'doughnut',
+    data:{labels:tmLbls,datasets:[{data:tmVals,backgroundColor:['#4A7A9B','#A8C5DA','#B5EAD7'],borderWidth:1,borderColor:'#fff'}]},
+    options:{...baseOp,plugins:{
+      legend:{display:true,position:'right',labels:{font:{size:11},color:'#6b6860',padding:8,boxWidth:10}},
+      tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw.toLocaleString()}人 (${bd.bindTiming[ctx.dataIndex].pct}%)`}}
+    }}
+  });
+}
+
+function buildT10(){
+  const p=el('t10'); if(!p)return;
+  const isJa=LANG==='ja';
+  const cd=D.ch10;
+  const chs=['WEB','TM','KOL','EC'];
+  const chClr={WEB:'#A8C5DA',TM:'#E8A598',KOL:'#C5B4E3',EC:'#A8D5B5'};
+  const mLbl=['25/04','25/05','25/06','25/07','25/08','25/09','25/10','25/11','25/12','26/01','26/02','26/03'];
+
+  function bizDetailTbl(ch){
+    const d=cd[ch]; const isJa=LANG==='ja';
+    const biz=[
+      {name:isJa?'學習商品':'學習商品',d:d.biz.gk},
+      {name:isJa?'周邊商品':'周邊商品',d:d.biz.hb},
+      {name:'Mirafeel',d:d.biz.mf}
+    ].filter(b=>b.d.rev>0);
+    let h=`<div class="tbl-wrap"><table style="font-size:12px"><thead><tr>
+      <th>${isJa?'事業':'事業'}</th><th class="r">${isJa?'売上':'銷售額'}</th>
+      <th class="r">${isJa?'数量':'數量'}</th><th class="r">${isJa?'単価':'單價'}</th>
+      <th class="r">FY24</th><th class="r">${isJa?'前年比':'同期比'}</th>
+    </tr></thead><tbody>`;
+    biz.forEach(b=>{
+      const yoy=b.d.rev24>0?((b.d.rev/b.d.rev24-1)*100).toFixed(1):null;
+      const yoyStr=yoy?`<span class="${parseFloat(yoy)>=0?'pos':'neg'}">${parseFloat(yoy)>=0?'+':''}${yoy}%</span>`:'NEW';
+      h+=`<tr><td style="font-weight:600">${b.name}</td>
+        <td class="r">${(b.d.rev/1e6).toFixed(2)}M</td>
+        <td class="r">${b.d.cnt.toLocaleString()}</td>
+        <td class="r" style="font-family:var(--mono)">${b.d.aov.toLocaleString()}</td>
+        <td class="r" style="color:var(--text3)">${b.d.rev24>0?(b.d.rev24/1e6).toFixed(2)+'M':'—'}</td>
+        <td class="r">${yoyStr}</td></tr>`;
+    });
+    h+=`</tbody></table></div>`;
+    return h;
+  }
+
+  function top6Tbl(ch){
+    const d=cd[ch]; const cols=t('t10_top6_col');
+    let h=`<div class="tbl-wrap"><table style="font-size:12px"><thead><tr>
+      ${cols.map((c,i)=>`<th${i>0?' class="r"':''}>${c}</th>`).join('')}</tr></thead><tbody>`;
+    d.top6.forEach((r,i)=>{
+      h+=`<tr${i===0?' style="background:var(--green-bg)"':''}><td style="font-size:11px">${r.n}</td>
+        <td class="r">${(r.rev/1e6).toFixed(2)}M</td>
+        <td class="r">${r.cnt.toLocaleString()}</td>
+        <td class="r" style="font-family:var(--mono)">${r.aov.toLocaleString()}</td></tr>`;
+    });
+    h+=`</tbody></table></div>`;
+    return h;
+  }
+
+  function ltvDistSmall(dist){
+    if(!dist)return`<div style="color:var(--text3);font-size:11px;padding:8px">${isJa?'LTVデータなし（ECはLTV集計対象外）':'EC不在LTV統計範圍內'}</div>`;
+    const total=Object.values(dist).reduce((a,v)=>a+v,0);
+    return Object.entries(dist).map(([k,v])=>{
+      const w=(v/total*100).toFixed(0);
+      const clr=k==='10K+'||k==='6-10K'?'#4A7A9B':'#A8C5DA';
+      return`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:11px">
+        <div style="width:52px;color:var(--text2)">${k}</div>
+        <div style="flex:1;height:14px;background:#e2dfd8;border-radius:2px;overflow:hidden">
+          <div style="width:${w}%;height:100%;background:${clr}"></div></div>
+        <div style="width:40px;text-align:right;font-family:var(--mono)">${v.toLocaleString()}</div></div>`;
+    }).join('');
+  }
+
+  function freqDistSmall(dist){
+    if(!dist)return`<div style="color:var(--text3);font-size:11px;padding:8px">${isJa?'データなし':'無資料'}</div>`;
+    const total=Object.values(dist).reduce((a,v)=>a+v,0);
+    return Object.entries(dist).map(([k,v])=>{
+      const w=(v/total*100).toFixed(0);
+      return`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:11px">
+        <div style="width:42px;color:var(--text2)">${k}</div>
+        <div style="flex:1;height:14px;background:#e2dfd8;border-radius:2px;overflow:hidden">
+          <div style="width:${w}%;height:100%;background:#A8C5DA"></div></div>
+        <div style="width:36px;text-align:right;font-family:var(--mono)">${v.toLocaleString()}</div>
+        <div style="width:32px;text-align:right;color:var(--text3)">${w}%</div></div>`;
+    }).join('');
+  }
+
+  function chCard(ch){
+    const d=cd[ch];
+    const yoy=((d.rev25/d.rev24-1)*100).toFixed(1);
+    const yoyClr=parseFloat(yoy)>=0?'var(--green)':'var(--red)';
+    const yoyStr=(parseFloat(yoy)>=0?'+':'')+yoy+'%';
+    return`<div style="background:${chClr[ch]}33;border:1.5px solid ${chClr[ch]};border-radius:8px;padding:12px;flex:1;min-width:140px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--text1)">${ch}</div>
+      <div style="font-size:18px;font-weight:300;font-family:var(--mono)">${(d.rev25/1e6).toFixed(1)}M</div>
+      <div style="font-size:11px;color:${yoyClr};font-weight:600;margin:2px 0">${yoyStr} ${isJa?'前年比':'同期比'}</div>
+      <div style="font-size:10.5px;color:var(--text2);margin-top:6px;line-height:1.8">
+        ${isJa?'平均単価':'平均單價'}: <strong>${d.aov.toLocaleString()}</strong> NTD<br>
+        SKU: <strong>${d.skuCnt}</strong> ${isJa?'種':'種'} / TOP10 <strong>${d.top10conc}%</strong><br>
+        ${d.custCnt?`${isJa?'顧客数':'客戶數'}: <strong>${d.custCnt.toLocaleString()}</strong><br>
+        ${isJa?'平均LTV':'平均LTV'}: <strong>${d.avgLtv.toLocaleString()}</strong> NTD`:`${isJa?'高成長管道':'高成長管道'} 📈`}
+      </div>
+    </div>`;
+  }
+
+  const cmpHtml=`
+    <div class="kpi-strip">
+      ${chs.map(ch=>{const d=cd[ch];const yoy=((d.rev25/d.rev24-1)*100).toFixed(1);return kpiCard(ch,(d.rev25/1e6).toFixed(1)+'M',(parseFloat(yoy)>=0?'+':'')+yoy+'%',parseFloat(yoy)>=0?'pos':'neg');}).join('')}
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">${chs.map(chCard).join('')}</div>
+    <div class="grid2">
+      <div class="cw"><div class="ct" data-k="t10_cmp_biz"></div><div style="height:220px"><canvas id="cvs-t10-biz" role="img" aria-label="管道別事業構成"></canvas></div></div>
+      <div class="cw"><div class="ct" data-k="t10_cmp_aov_biz"></div><div style="height:220px"><canvas id="cvs-t10-aov" role="img" aria-label="管道別×事業別単価"></canvas></div></div>
+    </div>
+    <div class="grid2">
+      <div class="cw"><div class="ct" data-k="t10_cmp_ltv_dist"></div><div style="height:220px"><canvas id="cvs-t10-ltv" role="img" aria-label="LTV分布比較"></canvas></div></div>
+      <div class="cw"><div class="ct" data-k="t10_cmp_freq"></div><div style="height:220px"><canvas id="cvs-t10-freq" role="img" aria-label="購買回数分布"></canvas></div></div>
+    </div>
+    <div class="ins"><div class="ins-h" onclick="toggleIns(this)"><span>▶ ${t('insight')}</span><span style="font-size:10px;color:var(--text3)">${t('open_hint')}</span></div><div class="ins-b">
+      <p><strong>${isJa?'4管道の本質：「広さ」vs「深さ」。':'4管道本質：「廣度」vs「深度」。'}</strong>${isJa?'WEB=214 SKU・6,327人・LTV3,831（最低）。TM=87 SKUに絞り・LTV5,852・綁定97.5%（高品質）。KOL=48 SKU超集中・LTV6,037（最高）。EC=最小だが+50.6%成長（最高伸び率）。':'WEB=214 SKU・6,327人・LTV 3,831（最低）。TM=87 SKU・LTV 5,852・綁定97.5%。KOL=48 SKU・LTV 6,037（最高）。EC=最小但+50.6%成長。'}</p>
+      <p><strong>${isJa?'学習単価はKOL最高（2,618 NTD）。':'學習商品單價KOL最高（2,618 NTD）。'}</strong>${isJa?'TM2,434・WEB2,276・EC2,236の順。KOL購入者はインフルエンサーの訴求力で高単価に誘導される。周辺商品はWEB384 NTDに対しTM756 NTDと2倍——提案力の差。':'TM 2,434・WEB 2,276・EC 2,236。KOL網紅訴求力推高單價。周邊商品WEB 384 vs TM 756 NTD，2倍差距。'}</p>
+      <p><strong>${isJa?'MirafeelはTM+243%・KOL+1,361%。':'Mirafeel在TM +243%・KOL +1,361%。'}</strong>${isJa?'P&G契約終了後の推進施策が機能。ECはMirafeelゼロ——最大の未開拓余地。':'P&G合約終止後施策奏效。EC的Mirafeel為零——最大未開發空間。'}</p>
+    </div></div>`;
+
+  const webHtml=`
+    <div class="kpi-strip">
+      ${kpiCard(isJa?'売上':'銷售額','21.9M',isJa?'+25.7% FY24比':'+25.7% FY24比','pos')}
+      ${kpiCard(isJa?'顧客数':'客戶數','6,327',isJa?'最多顧客管道':'最多客戶管道')}
+      ${kpiCard(isJa?'平均LTV':'平均LTV','3,831 NTD',isJa?'4管道中最低':'4管道最低','neg')}
+      ${kpiCard(isJa?'SKU数':'SKU數','214',isJa?'種・最多品揃え':'種・最多品項')}
+      ${kpiCard(isJa?'Mirafeel成長':'Mirafeel成長','+295%','FY24→FY25','pos')}
+    </div>
+    <div class="cw"><div class="ct" data-k="t10_biz_detail"></div>${bizDetailTbl('WEB')}</div>
+    <div class="grid2">
+      <div class="cw"><div class="ct" data-k="t10_top6"></div>${top6Tbl('WEB')}</div>
+      <div class="cw">
+        <div class="ct" data-k="t10_ltv_dist"></div>${ltvDistSmall(cd.WEB.ltvDist)}
+        <div class="ct" style="margin-top:12px" data-k="t10_freq"></div>${freqDistSmall(cd.WEB.freqDist)}
+      </div>
+    </div>
+    <div class="ins"><div class="ins-h" onclick="toggleIns(this)"><span>▶ ${t('insight')}</span><span style="font-size:10px;color:var(--text3)">${t('open_hint')}</span></div><div class="ins-b">
+      <p>${isJa?'<strong>「幅広いが浅い」がWEBの本質。</strong>214 SKU・6,327人と圧倒的な規模だが、1回購買率82%・平均LTV3,831 NTDは4管道最低。購入者の82%が「一度買ったきり」という事実がある。':'<strong>「廣但淺」是WEB的本質。</strong>214 SKU・6,327人規模最大，但1次購買率82%・平均LTV 3,831 NTD為4管道最低。82%的購買者「買了一次就沒再來」。'}</p>
+      <p>${isJa?'<strong>MirafeelはWEBが主要販路（+295%）。</strong>整箱4サイズ揃い、4管道中唯一充実。周辺商品21%もWEB特有の強みで舞台劇なしで販売できる。':'<strong>Mirafeel以WEB為主（+295%）。</strong>整箱4尺碼完整。周邊商品21%無需舞台劇管道即可販售。'}</p>
+      <p>${isJa?'<strong>課題：TOP10が71%・残り204商品が29%の長尾問題。</strong>ただしWEBの「発見性」自体は差別化要因。LC8T×LINE施策で2回目購買を設計することが最大レバー。':'<strong>課題：TOP10占71%，其餘204商品僅29%（長尾問題）。</strong>WEB可發現性仍是差異化優勢。透過LC8T×LINE設計回購是最大槓桿。'}</p>
+    </div></div>`;
+
+  const tmHtml=`
+    <div class="kpi-strip">
+      ${kpiCard(isJa?'売上':'銷售額','21.3M',isJa?'▲2.8% FY24比':'▲2.8% FY24比','neg')}
+      ${kpiCard(isJa?'顧客数':'客戶數','3,671',isJa?'平均LTV最高層':'平均LTV高品質')}
+      ${kpiCard(isJa?'平均LTV':'平均LTV','5,852 NTD',isJa?'LINE綁定率97.5%':'LINE綁定率97.5%','pos')}
+      ${kpiCard(isJa?'平均単価':'平均單價','2,141 NTD',isJa?'WEBの2倍':'WEB的2倍','pos')}
+      ${kpiCard(isJa?'学習商品比率':'學習商品比率','92%',isJa?'最も学習集中':'最集中學習')}
+    </div>
+    <div class="cw"><div class="ct" data-k="t10_biz_detail"></div>${bizDetailTbl('TM')}</div>
+    <div class="grid2">
+      <div class="cw"><div class="ct" data-k="t10_top6"></div>${top6Tbl('TM')}</div>
+      <div class="cw">
+        <div class="ct" data-k="t10_ltv_dist"></div>${ltvDistSmall(cd.TM.ltvDist)}
+        <div class="ct" style="margin-top:12px" data-k="t10_freq"></div>${freqDistSmall(cd.TM.freqDist)}
+      </div>
+    </div>
+    <div class="ins"><div class="ins-h" onclick="toggleIns(this)"><span>▶ ${t('insight')}</span><span style="font-size:10px;color:var(--text3)">${t('open_hint')}</span></div><div class="ins-b">
+      <p>${isJa?'<strong>TM：高単価・高品質・安定。</strong>学習単価2,434 NTD・綁定率97.5%・LTV5,852 NTD。LTV分布は2K〜10K帯が厚くWEBと対照的。電話提案で英語4,571・語彙4,667 NTDの高単価商品が売れる。':'<strong>TM：高單價・高品質・穩定。</strong>學習單價2,434 NTD・綁定97.5%・LTV 5,852 NTD。LTV分布厚於2K〜10K帶，與WEB形成對比。'}</p>
+      <p>${isJa?'<strong>▲2.8%の構造：学習▲7.2%を周辺+82%・MF+243%が補った。</strong>学習減少は需要飽和でなくプロダクトミックスの問題。周辺+MFで提案の裾野が広がった証拠。':'<strong>▲2.8%結構：學習▲7.2%被周邊+82%・MF+243%補足。</strong>提案廣度擴大的證據。'}</p>
+      <p>${isJa?'<strong>課題：77%が1回のみ購買。</strong>購買後30〜60日フォローアップ設計が最重要。87 SKUから次回提案をシステム化すれば精度向上。':'<strong>課題：77%只購買1次。</strong>購買後30〜60天跟進設計最重要。系統化下次提案可提高精準度。'}</p>
+    </div></div>`;
+
+  const kolHtml=`
+    <div class="kpi-strip">
+      ${kpiCard(isJa?'売上':'銷售額','15.5M',isJa?'▲16.9% FY24比':'▲16.9% FY24比','neg')}
+      ${kpiCard(isJa?'平均LTV':'平均LTV','6,037 NTD',isJa?'4管道中最高':'4管道最高','pos')}
+      ${kpiCard(isJa?'平均単価':'平均單價','2,312 NTD',isJa?'最高単価管道':'最高單價管道','pos')}
+      ${kpiCard(isJa?'SKU集中度':'SKU集中度','94%',isJa?'TOP10（48種中）':'TOP10（48種中）')}
+      ${kpiCard('Mirafeel成長','+1,361%','FY24→FY25','pos')}
+    </div>
+    <div class="cw"><div class="ct" data-k="t10_biz_detail"></div>${bizDetailTbl('KOL')}</div>
+    <div class="cw"><div class="ct" data-k="t10_kol_monthly"></div>
+      <div style="height:200px"><canvas id="cvs-t10-kol" role="img" aria-label="KOL月別銷售"></canvas></div>
+      <div class="cn" data-k="t10_kol_monthly_n"></div>
+    </div>
+    <div class="grid2">
+      <div class="cw"><div class="ct" data-k="t10_top6"></div>${top6Tbl('KOL')}</div>
+      <div class="cw">
+        <div class="ct" data-k="t10_ltv_dist"></div>${ltvDistSmall(cd.KOL.ltvDist)}
+        <div class="ct" style="margin-top:12px" data-k="t10_freq"></div>${freqDistSmall(cd.KOL.freqDist)}
+      </div>
+    </div>
+    <div class="ins"><div class="ins-h" onclick="toggleIns(this)"><span>▶ ${t('insight')}</span><span style="font-size:10px;color:var(--text3)">${t('open_hint')}</span></div><div class="ins-b">
+      <p>${isJa?'<strong>KOLは最高品質・最低多様性の管道。</strong>平均LTV6,037 NTD・平均単価2,312 NTD は4管道中トップ。しかし学習商品94%集中・SKU48種と最も絞り込まれた管道。インフルエンサーの訴求力が高単価商品の購買を引き出している。':'<strong>KOL是最高品質・最低多樣性的管道。</strong>平均LTV 6,037 NTD・平均單價2,312 NTD為4管道之冠。但學習商品94%集中・SKU 48種是最集中的管道。網紅訴求力引導高單價商品購買。'}</p>
+      <p>${isJa?'<strong>▲16.9%主因：学習▲20.5%。</strong>5月・3月の大型施策は継続中だがFY24の18.4M→14.6Mに減少。KOLの施策効果・商品選定の見直しが必要。Mirafeel+1,361%は新成功事例。':'<strong>▲16.9%主因：學習▲20.5%。</strong>大型施策持續但銷售下滑。需檢討KOL施策效果。Mirafeel +1,361%是新成功案例。'}</p>
+      <p>${isJa?'<strong>課題：周辺・MirafeelのKOL活用がほぼゼロ。</strong>KOL×Mirafeel・KOL×周辺が未開拓の最大余地。5月・3月スパイクは公演シーズンとの連動が有効。':'<strong>課題：周邊・MirafeelKOL活用幾乎為零。</strong>KOL×Mirafeel・KOL×周邊為最大未開發空間。5月・3月爆發與演出季節連動。'}</p>
+    </div></div>`;
+
+  const ecHtml=`
+    <div class="kpi-strip">
+      ${kpiCard(isJa?'売上':'銷售額','6.6M',isJa?'+50.6% FY24比 最高伸び率':'+50.6% FY24比 最高成長','pos')}
+      ${kpiCard(isJa?'学習商品成長':'學習商品成長','+67.4%','FY24→FY25','pos')}
+      ${kpiCard(isJa?'平均単価':'平均單價','1,210 NTD',isJa?'学習2,236/周辺424':'學習2,236/周邊424')}
+      ${kpiCard(isJa?'Mirafeel':'Mirafeel','0M',isJa?'未開拓':'未開拓','neg')}
+      ${kpiCard('SKU','59',isJa?'種（MF除く）':'種（不含MF）')}
+    </div>
+    <div class="cw"><div class="ct" data-k="t10_biz_detail"></div>${bizDetailTbl('EC')}</div>
+    <div class="cw"><div class="ct" data-k="t10_top6"></div>${top6Tbl('EC')}</div>
+    <div class="ins"><div class="ins-h" onclick="toggleIns(this)"><span>▶ ${t('insight')}</span><span style="font-size:10px;color:var(--text3)">${t('open_hint')}</span></div><div class="ins-b">
+      <p>${isJa?'<strong>EC：最小・最高成長・最大余地。</strong>6.6M・+50.6%（最高成長）。学習+67.4%・周辺+7.1%。Shopee経由でWEBとは異なる客層に届く可能性。':'<strong>EC：最小・最高成長・最大空間。</strong>6.6M・+50.6%。學習+67.4%・周邊+7.1%。Shopee觸及WEB以外客群。'}</p>
+      <p>${isJa?'<strong>WEBとの商品重複が高い。</strong>點讀巧比・好情緒EQ・雙語圖鑑が両方に上位。ECは「WEBを見つけられなかった顧客の受け皿」として機能。棲み分け設計が必要。':'<strong>與WEB商品重疊度高。</strong>相同商品透過不同管道銷售，EC為「找不到WEB客戶的接收器」。需設計管道定位。'}</p>
+      <p>${isJa?'<strong>Mirafeelゼロが最大の未開拓余地。</strong>WEB（1.46M）・TM（0.58M）・KOL（0.48M）はすべてMirafeelを扱っているがECはゼロ。Shopeeは消耗品の定期購入に強いプラットフォーム。Mirafeel×Shopeeは今すぐ着手できる高優先施策。':'<strong>Mirafeel為零是最大未開發空間。</strong>WEB（1.46M）・TM（0.58M）・KOL（0.48M）皆有販售Mirafeel，唯獨EC為零。Shopee是消耗品定期訂購的強力平台。Mirafeel×Shopee是可立即著手的高優先施策。'}</p>
+    </div></div>`;
+
+  p.innerHTML=`
+  <div class="sbar" style="margin-bottom:12px">
+    <button class="sb on" data-g="t10s" data-sid="t10-cmp" onclick="showSub('t10s','t10-cmp')" data-k="t10_cmp"></button>
+    <button class="sb" data-g="t10s" data-sid="t10-web" onclick="showSub('t10s','t10-web')">WEB</button>
+    <button class="sb" data-g="t10s" data-sid="t10-tm" onclick="showSub('t10s','t10-tm')">TM</button>
+    <button class="sb" data-g="t10s" data-sid="t10-kol" onclick="showSub('t10s','t10-kol')">KOL</button>
+    <button class="sb" data-g="t10s" data-sid="t10-ec" onclick="showSub('t10s','t10-ec')">EC</button>
+  </div>
+  <div id="t10-cmp" class="sp on" data-g="t10s">${cmpHtml}</div>
+  <div id="t10-web" class="sp" data-g="t10s">${webHtml}</div>
+  <div id="t10-tm" class="sp" data-g="t10s">${tmHtml}</div>
+  <div id="t10-kol" class="sp" data-g="t10s">${kolHtml}</div>
+  <div id="t10-ec" class="sp" data-g="t10s">${ecHtml}</div>`;
+  applyI18n();
+}
+
+function initT10(){
+  const cd=D.ch10; const isJa=LANG==='ja';
+  const activeSub=(document.querySelector('.sp.on[data-g="t10s"]')||{}).id||'t10-cmp';
+  const chClr={WEB:'#A8C5DA',TM:'#E8A598',KOL:'#C5B4E3',EC:'#A8D5B5'};
+
+  if(activeSub==='t10-cmp'){
+    const chs=['WEB','TM','KOL','EC'];
+    const gkPct=chs.map(c=>+(cd[c].biz.gk.rev/(cd[c].rev25)*100).toFixed(1));
+    const hbPct=chs.map(c=>+(cd[c].biz.hb.rev/(cd[c].rev25)*100).toFixed(1));
+    const mfPct=chs.map(c=>+(cd[c].biz.mf.rev/(cd[c].rev25)*100).toFixed(1));
+    mkChart('cvs-t10-biz',{type:'bar',data:{labels:chs,datasets:[
+      {label:isJa?'學習商品':'學習商品',data:gkPct,backgroundColor:'#A8C5DA',stack:'s',borderWidth:0},
+      {label:isJa?'周邊商品':'周邊商品',data:hbPct,backgroundColor:'#A8D5B5',stack:'s',borderWidth:0},
+      {label:'Mirafeel',data:mfPct,backgroundColor:'#F5D4A0',stack:'s',borderWidth:0}
+    ]},options:{...baseOpts,indexAxis:'y',scales:{
+      x:{stacked:true,grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10},callback:v=>v+'%'},max:100},
+      y:{stacked:true,grid:{display:false},ticks:{color:'#1a1916',font:{size:11}}}
+    },plugins:{...baseOpts.plugins,legend:{display:true,position:'top',labels:{font:{size:10},padding:8,boxWidth:10,color:'#6b6860'}},
+    tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.raw}%`}}}}});
+
+    const gkAov=chs.map(c=>cd[c].biz.gk.aov);
+    const hbAov=chs.map(c=>cd[c].biz.hb.aov);
+    mkChart('cvs-t10-aov',{type:'bar',data:{labels:chs,datasets:[
+      {label:isJa?'學習商品':'學習商品',data:gkAov,backgroundColor:'#A8C5DA',borderWidth:0,borderRadius:2},
+      {label:isJa?'周邊商品':'周邊商品',data:hbAov,backgroundColor:'#A8D5B5',borderWidth:0,borderRadius:2}
+    ]},options:{...baseOpts,scales:{
+      x:{grid:{display:false},ticks:{color:'#1a1916',font:{size:11}}},
+      y:{grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10},callback:v=>v.toLocaleString()}}
+    },plugins:{...baseOpts.plugins,legend:{display:true,position:'top',labels:{font:{size:10},padding:8,boxWidth:10,color:'#6b6860'}},
+    tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.raw.toLocaleString()} NTD`}}}}});
+
+    const lbins=['〜2K','2-4K','4-6K','6-10K','10K+'];
+    const lClrs=['#A8C5DA','#E8A598','#C5B4E3'];
+    mkChart('cvs-t10-ltv',{type:'bar',data:{labels:lbins,datasets:['WEB','TM','KOL'].map((c,i)=>({
+      label:c,data:lbins.map(k=>cd[c].ltvDist?cd[c].ltvDist[k]||0:0),
+      backgroundColor:lClrs[i],borderWidth:0,borderRadius:2
+    }))},options:{...baseOpts,scales:{
+      x:{grid:{display:false},ticks:{color:'#9c9a94',font:{size:10}}},
+      y:{grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10},callback:v=>v>=1000?(v/1000).toFixed(0)+'K':v}}
+    },plugins:{...baseOpts.plugins,legend:{display:true,position:'top',labels:{font:{size:10},padding:8,boxWidth:10,color:'#6b6860'}}}}});
+
+    const fbins=['1回','2回','3回','4-5回','6回+'];
+    mkChart('cvs-t10-freq',{type:'bar',data:{labels:fbins,datasets:['WEB','TM','KOL'].map((c,i)=>({
+      label:c,data:fbins.map(k=>cd[c].freqDist?cd[c].freqDist[k]||0:0),
+      backgroundColor:lClrs[i],borderWidth:0,borderRadius:2
+    }))},options:{...baseOpts,scales:{
+      x:{grid:{display:false},ticks:{color:'#9c9a94',font:{size:10}}},
+      y:{grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10},callback:v=>v>=1000?(v/1000).toFixed(0)+'K':v}}
+    },plugins:{...baseOpts.plugins,legend:{display:true,position:'top',labels:{font:{size:10},padding:8,boxWidth:10,color:'#6b6860'}}}}});
+  }
+
+  if(activeSub==='t10-kol'){
+    const mLbl=['25/04','25/05','25/06','25/07','25/08','25/09','25/10','25/11','25/12','26/01','26/02','26/03'];
+    mkChart('cvs-t10-kol',{type:'bar',data:{labels:mLbl,datasets:[{
+      data:cd.KOL.monthly,backgroundColor:cd.KOL.monthly.map(v=>v>2000000?'#B05040':'#F5C5B5'),borderWidth:0,borderRadius:2
+    }]},options:{...baseOpts,scales:{
+      x:{grid:{display:false},ticks:{color:'#9c9a94',font:{size:10}}},
+      y:{grid:{color:'#e2dfd8'},ticks:{color:'#9c9a94',font:{size:10},callback:v=>(v/1e6).toFixed(1)+'M'}}
+    },plugins:{...baseOpts.plugins,tooltip:{callbacks:{label:ctx=>`${(ctx.raw/1e6).toFixed(2)}M NTD`}}}},
+    plugins:[valLbl('#B05040','9px',v=>(v/1e6).toFixed(1)+'M')]});
+  }
+}
+
+buildAllContent();
+initAllCharts();
+// TOPページからのタブ指定を受け取る
+(function(){
+  const target = sessionStorage.getItem('fy25_target_tab');
+  sessionStorage.removeItem('fy25_target_tab');
+  if(target && ['t1','t2','t3','t4','t5','t6','t7','t8','t9','t10'].includes(target)){
+    showTab(target);
+  } else {
+    document.querySelectorAll('.tab-btn')[0].classList.add('on');
+  }
+})();
+</script>
+</body>
+</html>
